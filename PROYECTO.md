@@ -369,30 +369,3 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
   * **4a. Tiempo expirado:** Si la diferencia es mayor a la ventana, reinicia el registro dejando el contador en 1 y actualizando la marca de tiempo.
 * **Postcondiciones:** Monitoreo coherente enfocado en ataques de fuerza bruta rápidos.
 
----
-
-## 4. IDEAS (Preguntas de Refinamiento Técnico)
-Como Analista de Sistemas Senior, identifico los siguientes puntos de ambigüedad técnica y arquitectónica que requieren definición inmediata para evitar impedimentos durante los Sprints:
-
-1. **Estrategia de Integración de Frontends (Doble Framework):**
-   El requerimiento exige implementar dos frameworks de Frontend (A y B). ¿Cómo se unificarán visualmente para el usuario?
-   * *Opción A:* ¿Se usará una arquitectura de **Microfrontends** (ej. Module Federation o Single-SPA)?
-   * *Opción B:* ¿Se utilizará un proxy inverso (ej. Nginx) que enrute por rutas (ej: `/admin` para Frontend A y `/logs` para Frontend B)?
-
-2. **Mecanismo de Comunicación Inter-Servicios (Servicio 1 y Servicio 2):**
-   Para la orden de desbaneo manual iniciada en el dashboard: ¿Cómo se comunicará el Servicio 1 con el Servicio 2?
-   * ¿Utilizarán la capacidad de **Pub/Sub (Mensajería) de Redis**?
-   * ¿Se comunicarán mediante llamadas HTTP REST directas entre servicios?
-
-3. **Ejecución y Privilegios sobre UFW:**
-   Dado que el proyecto requiere Redis dockerizado y backend modular, ¿el Servicio 2 se ejecutará directamente sobre el Sistema Operativo Host o dentro de un contenedor Docker?
-   * *Si corre dentro de Docker:* ¿Se han contemplado los permisos de red (`CAP_NET_ADMIN`) y el acceso al socket del Host para manipular ufw?
-
-4. **Lista Blanca de IPs (Whitelist):**
-   ¿Se requiere contemplar una lista blanca de IPs (ej: IP del Administrador o `127.0.0.1`) para prevenir situaciones accidentales de auto-bloqueo?
-
-5. **Ventana Temporal del Contador de Intentos:**
-   La regla establece un número de intentos antes de banear. ¿Dichos intentos deben ocurrir dentro de una ventana de tiempo definida (ej: 3 fallos en 5 minutos) o se cuentan de manera acumulada indefinida?
-
-6. **Origen del Log SSH:**
-   ¿En qué ruta o servicio del sistema operativo se consumirán los logs? (Ej: `/var/log/auth.log` en Ubuntu/Debian, `/var/log/secure` en RHEL/CentOS, o lectura directa de `journalctl`).
