@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Administrador
+    participant Front as Frontend (Dashboard)
+    participant S1 as Servicio 1 (API Admin)
+    participant Redis as Redis Stream
+    participant S2 as Servicio 2 (Motor UFW)
+    participant UFW as Firewall UFW
+
+    Admin->>Front: Presiona botón "Desbanear IP"
+    Front->>S1: POST /api/v1/ips/unban { "ip": "192.168.1.50" }
+    S1->>S1: Valida sesión y formato de IP
+    S1->>Redis: XADD security:events:unban * action UNBAN ip 192.168.1.50 requested_by admin timestamp 1724851200
+    Redis-->>S1: Retorna ID del evento (ej: 1724851200000-0)
+    S1-->>Front: HTTP 202 Accepted (Petición en cola)
+    Front-->>Admin: Notifica "Orden de desbaneo enviada"
+
+    loop Consumer Group Polling
+        S2->>Redis: XREADGROUP GROUP ufw_workers consumer_1 STREAMS security:events:unban >
+        Redis-->>S2: Entrega evento UNBAN (IP: 192.168.1.50)
+        S2->>UFW: ufw delete deny from 192.168.1.50
+        UFW-->>S2: Confirmación de regla removida
+        S2->>Redis: Actualiza estado en Hash de IPs & XACK security:events:unban ufw_workers 1724851200000-0
+    end
