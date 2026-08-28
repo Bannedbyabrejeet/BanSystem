@@ -1,0 +1,8 @@
+# Contrato de Mensaje: Evento de Desbaneo Manual
+stream: "security:events:unban"
+consumer_group: "ufw_workers"
+payload:
+  action: "UNBAN"         # Tipo de operación
+  ip: "192.168.1.50"      # Dirección IP objetivo a desbloquear
+  requested_by: "admin"   # Identificador del usuario administrador
+  timestamp: 1724851200   # Timestamp Unix (Epoch) de la orden
