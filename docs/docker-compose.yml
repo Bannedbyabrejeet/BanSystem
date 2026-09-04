@@ -51,7 +51,7 @@ services:
       - internal_net
 
   # =========================================================================
-  # 4. Servicio 2: Motor de Seguridad & UFW Daemon (Node.js / Express)
+  # 4. Servicio 2: Motor de Seguridad & UFW Daemon (Flask)
   #    -> SOLUCIÓN AL ISSUE: Permisos de kernel y lectura de logs del Host
   # =========================================================================
   service2-engine:
