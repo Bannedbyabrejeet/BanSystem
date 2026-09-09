@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # =========================================================================
+  # 1. Reverse Proxy & API Gateway (Nginx)
+  # =========================================================================
+  proxy:
+    image: nginx:alpine
+    container_name: bannedbyabrejeet_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - service1-api
+      - redis
+    networks:
+      - internal_net
+
+  # =========================================================================
+  # 2. Servicio 1: API REST & Administración (FastAPI)
+  # =========================================================================
+  service1-api:
+    build:
+      context: ./backend-service1
+      dockerfile: Dockerfile
+    container_name: bannedbyabrejeet_service1
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+  # =========================================================================
+  # 3. Base de Datos en Memoria & Message Broker (Redis 7.2 Alpine)
+  # =========================================================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: bannedbyabrejeet_redis
+    restart: unless-stopped
+    # Exponer solo en loopback del host para servicio con network_mode: host
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      # Configuración personalizada de Redis
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      # Volumen nombrado persistente para AOF + RDB
+      - redis_data:/data
+    # Healthcheck nativo con redis-cli ping
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    # Límites de recursos para el contenedor
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - internal_net
+
+  # =========================================================================
+  # 4. Servicio 2: Motor de Seguridad & UFW Daemon (Flask - Python)
+  #    -> Corre en network_mode: "host" para manipular firewall del kernel
+  # =========================================================================
+  service2-engine:
+    build:
+      context: ./backend-service2
+      dockerfile: Dockerfile
+    container_name: bannedbyabrejeet_service2
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: "host"
+    environment:
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - LOG_FILE_PATH=/var/log/auth.log
+    volumes:
+      # Lectura de logs SSH del Host en modo Solo Lectura
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - /var/log:/var/log/host_logs:ro
+      # Módulos y configuración de UFW
+      - /lib/modules:/lib/modules:ro
+      - /etc/ufw:/etc/ufw:rw
+
+networks:
+  internal_net:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local
