@@ -218,7 +218,7 @@ Consultar `docs/REDIS_SCHEMA.md` para el esquema completo y detallado.
 
 | Tipo de Clave | Estructura | Uso Principal | Servicios |
 |---------------|------------|---------------|-----------|
-| Credenciales | `user:*` | Hash — Credenciales admin | Servicio 1 |
+| Credenciales | `admin:*`, `reset_token:*` | String — Admin y recuperación | Servicio 1 |
 | Parámetros | `config:*` | Hash/Set — Config firewall | Servicio 1 + 2 |
 | Whitelist | `config:whitelist` | Set — IPs permitidas | Servicio 1 + 2 |
 | Intentos fallidos | `failed:<IP>` | Sorted Set — Sliding window | Servicio 2 |
@@ -230,7 +230,9 @@ Consultar `docs/REDIS_SCHEMA.md` para el esquema completo y detallado.
 
 | Clave | Tipo | TTL | Propietario |
 |-------|------|-----|-------------|
-| `user:admin` | Hash | Ninguno (persistente) | Servicio 1 |
+| `admin:credentials` | String JSON | Ninguno (persistente) | Servicio 1 |
+| `admin:initialized` | String | Ninguno (persistente) | Servicio 1 |
+| `reset_token:<token>` | String JSON | 900 segundos | Servicio 1 |
 | `config:settings` | Hash | Ninguno (persistente) | Servicio 1 |
 | `config:whitelist` | Set | Ninguno (persistente) | Servicio 1 + 2 |
 | `failed:<IP>` | ZSET | `findtime` segundos | Servicio 2 |
@@ -267,7 +269,7 @@ ports:
   - "127.0.0.1:6379:6379"
 ```
 
-Los microservicios se conectan por la red interna `internal_net` sin exponer puertos adicionales.
+Redis se conecta por la red interna `internal_net`; el puerto 8000 del Servicio 1 se publica solo en loopback para el frontend local.
 
 ---
 
@@ -312,7 +314,7 @@ cp .env.example .env
 | Variable | Descripción | Ejemplo |
 |----------|-------------|---------|
 | `REDIS_PASSWORD` | Contraseña de autenticación Redis | `MiContraseñaSegura123!` |
-| `JWT_SECRET` | Secret para tokens JWT | `JwtSecretKeyUltraSeguro` |
+| `JWT_SECRET` | Secret de al menos 32 bytes para firmar JWT | Valor generado con `openssl rand -hex 32` |
 
 ---
 

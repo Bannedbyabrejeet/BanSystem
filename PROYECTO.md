@@ -230,7 +230,7 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
   6. El Servicio 1 confirma la autenticación y devuelve una cookie/token de sesión.
   7. El Frontend A redirige al Administrador al Dashboard de administración.
 * **Flujos Alternativos / Excepciones:**
-  * **5a. Credenciales inválidas:** El Servicio 1 responde código HTTP 401. El Frontend A muestra el mensaje "Usuario o contraseña incorrectos". El flujo retorna al paso 3.
+  * **5a. Credenciales inválidas:** El Servicio 1 responde código HTTP 401. El Frontend A muestra el mensaje "Credenciales inválidas". El flujo retorna al paso 3.
   * **5b. Error de conexión a Redis:** El Servicio 1 responde código HTTP 500. El Frontend A informa "Servicio de autenticación no disponible".
 * **Postcondiciones:** El Administrador obtiene una sesión activa para operar el sistema.
 

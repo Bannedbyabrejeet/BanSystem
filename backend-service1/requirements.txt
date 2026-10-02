@@ -1,0 +1,17 @@
+# Dependencias de ejecución del Servicio 1 (Bannedbyabrejeet - FastAPI).
+# Versiones acotadas para que una actualización futura no rompa el contrato.
+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# Configuración tipada desde variables de entorno (.env)
+pydantic==2.10.4
+pydantic-settings==2.7.0
+email-validator==2.2.0
+
+# Cliente asíncrono de Redis (redis.asyncio)
+redis==5.2.1
+
+# Criptografía: bcrypt para contraseñas, PyJWT para los tokens de sesión
+bcrypt==4.2.1
+PyJWT==2.10.1
