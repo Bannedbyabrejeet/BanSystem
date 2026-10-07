@@ -1,2 +1,32 @@
+# --- Secretos y configuración local ---
 .env
 env
+*.local
+
+# --- Node / Frontend A ---
+node_modules/
+frontend-admin/build/
+frontend-admin/dist/
+frontend-admin/.vite/
+npm-debug.log*
+yarn-error.log*
+
+# --- Python / Backend ---
+.venv/
+venv/
+.pylibs/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- Tests y herramientas ---
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- Editores y SO ---
+.idea/
+.vscode/
+.DS_Store

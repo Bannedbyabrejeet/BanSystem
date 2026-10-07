@@ -1,0 +1,474 @@
+/* =====================================================================
+   Bannedbyabrejeet · Frontend A (React)
+   Design tokens compartidos con el resto de frontends (ADR 001).
+   ===================================================================== */
+
+:root {
+  /* Paleta */
+  --color-bg: #0b1120;
+  --color-bg-soft: #111a2e;
+  --color-surface: #16203a;
+  --color-surface-2: #1d2a49;
+  --color-border: #2a3a63;
+  --color-text: #e6ecff;
+  --color-text-muted: #97a6c9;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-success: #22c55e;
+  --color-error: #f87171;
+  --color-warning: #fbbf24;
+
+  /* Tipografía */
+  --font-sans: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  /* Espaciado y formas */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-card: 0 18px 40px rgb(0 0 0 / 35%);
+
+  --transition: 160ms ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: radial-gradient(circle at 20% 0%, #16224a 0%, var(--color-bg) 55%);
+  color: var(--color-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- *
+   Layout de autenticación
+   ---------------------------------------------------------------- */
+.auth {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.auth__card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+}
+
+.auth__header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth__title {
+  margin: 16px 0 6px;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.auth__subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.925rem;
+}
+
+.auth__footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.auth__footer p {
+  margin: 0;
+}
+
+/* Emblema de marca */
+.brand {
+  display: flex;
+  justify-content: center;
+}
+
+.brand__shield {
+  display: block;
+  width: 46px;
+  height: 52px;
+  background: linear-gradient(160deg, var(--color-primary) 0%, #1d4ed8 100%);
+  clip-path: polygon(50% 0%, 100% 18%, 100% 62%, 50% 100%, 0% 62%, 0% 18%);
+  position: relative;
+}
+
+.brand__shield::after {
+  content: '';
+  position: absolute;
+  inset: 34% 36% 34% 36%;
+  background: var(--color-surface);
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------- *
+   Formularios
+   ---------------------------------------------------------------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form__note {
+  margin: 0;
+  font-size: 0.825rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.form__note code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-warning);
+}
+
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.field__required {
+  color: var(--color-error);
+}
+
+.field__input {
+  width: 100%;
+  padding: 11px 13px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.field__input::placeholder {
+  color: #64749b;
+}
+
+.field__input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 22%);
+}
+
+.field--error .field__input {
+  border-color: var(--color-error);
+}
+
+.field__hint,
+.field__error {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.field__hint {
+  color: var(--color-text-muted);
+}
+
+.field__error {
+  color: var(--color-error);
+}
+
+.field__toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 38px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.field__toggle:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-surface-2);
+}
+
+.field__toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Requisitos de contraseña */
+.password-rules {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 2px 0 0;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.password-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.password-rule--ok {
+  color: var(--color-success);
+}
+
+/* ---------------------------------------------------------------- *
+   Botones
+   ---------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: var(--color-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  text-decoration: none;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--secondary {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface-2);
+}
+
+.btn__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgb(255 255 255 / 45%);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn__spinner,
+  .loader-page__spinner {
+    animation-duration: 2s;
+  }
+}
+
+/* ---------------------------------------------------------------- *
+   Alertas
+   ---------------------------------------------------------------- */
+.alert {
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  border: 1px solid;
+}
+
+.alert--error {
+  color: #fecaca;
+  background: rgb(248 113 113 / 12%);
+  border-color: rgb(248 113 113 / 40%);
+}
+
+.alert--success {
+  color: #bbf7d0;
+  background: rgb(34 197 94 / 12%);
+  border-color: rgb(34 197 94 / 40%);
+}
+
+.alert--info {
+  color: #bfdbfe;
+  background: rgb(59 130 246 / 12%);
+  border-color: rgb(59 130 246 / 40%);
+}
+
+/* ---------------------------------------------------------------- *
+   Carga
+   ---------------------------------------------------------------- */
+.loader-page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--color-text-muted);
+}
+
+.loader-page__spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+/* ---------------------------------------------------------------- *
+   Dashboard (esqueleto de la Issue #5)
+   ---------------------------------------------------------------- */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dashboard__session,
+.dashboard__pending {
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+}
+
+.dashboard__subtitle {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.dashboard__data {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.dashboard__data dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.dashboard__data dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.dashboard__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard__list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.dashboard__list p {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.dashboard__tag {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+}
+
+/* ---------------------------------------------------------------- *
+   Responsive
+   ---------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .auth__card {
+    padding: 24px 20px;
+  }
+
+  .auth__title {
+    font-size: 1.3rem;
+  }
+}

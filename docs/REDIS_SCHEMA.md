@@ -17,7 +17,8 @@
 
 | Tipo de Clave | Estructura | Uso Principal | Servicios |
 |---|---|---|---|
-| `user:*` | Hash | Credenciales admin | Servicio 1 (FastAPI) |
+| `admin:*` | String / Set | Credenciales, inicialización e índice de tokens | Servicio 1 (FastAPI) |
+| `reset_token:*` | String | Tokens opacos de recuperación de contraseña | Servicio 1 (FastAPI) |
 | `config:*` | Hash / Set | Parámetros y whitelist | Servicio 1 + Servicio 2 |
 | `failed:<IP>` | Sorted Set | Contador de intentos fallidos | Servicio 2 (Flask) |
 | `ips:banned` | Hash | IPs baneadas activas | Servicio 1 + Servicio 2 |
@@ -30,51 +31,66 @@ Todos los valores de TTL se expresan en **segundos**. Los timestamps son **UNIX 
 
 ## 1. Credenciales de Administrador
 
-### Clave
-```
-user:admin
+### Claves
+```text
+admin:credentials
+admin:initialized
+admin:reset_tokens
+reset_token:<token-opaco>
 ```
 
 ### Tipo
-**Hash**
+- `admin:credentials`: **String JSON**, persistente y sin TTL.
+- `admin:initialized`: **String**, marcador permanente sin TTL.
+- `admin:reset_tokens`: **Set**, índice de tokens emitidos, persistente y sin TTL.
+- `reset_token:<token-opaco>`: **String JSON**, temporal y creado con `SETEX`.
 
-### Campos
+### Campos de `admin:credentials`
 | Campo | Tipo | Descripción |
 |---|---|---|
-| `username` | String | Nombre de usuario del administrador |
-| `password_hash` | String | Hash bcrypt/argon2 de la contraseña |
-| `email` | String | Correo electrónico registrado |
-| `created_at` | Integer | Timestamp UNIX de creación |
+| `admin_id` | String UUID | Identificador inmutable usado como `sub` del JWT |
+| `username` | String | Nombre de usuario normalizado |
+| `password_hash` | String | Hash bcrypt de la contraseña |
+| `email` | String | Correo normalizado para recuperación |
+| `created_at` | String ISO 8601 | Fecha de creación UTC |
+| `updated_at` | String ISO 8601 | Última actualización UTC |
+| `session_version` | Integer | Versión que invalida JWT tras un cambio de contraseña |
 
-### Ejemplo `redis-cli`
+### Token de recuperación
+El valor contiene `admin_id` y `session_version`. Redis aplica el TTL nativo; el servicio no ejecuta tareas de limpieza. El reset usa Lua para comprobar y consumir el token, actualizar `admin:credentials` e incrementar `session_version` en una sola operación atómica.
+
+### Índice de tokens emitidos (`admin:reset_tokens`)
+
+Cada miembro tiene la forma `<admin_id>|<token-opaco>`. El índice **no lleva TTL**: es el registro de los tokens que el servicio ha emitido, y sirve para revocar los enlaces anteriores cuando se emite uno nuevo. Al pedir un enlace se ejecuta:
+
+1. `SETEX reset_token:<nuevo> <ttl> <payload>`.
+2. Recorrer `SMEMBERS admin:reset_tokens` y, para cada miembro del mismo `admin_id` distinto del nuevo, aplicar `DEL reset_token:<anterior>` + `SREM`.
+3. `SADD admin:reset_tokens "<admin_id>|<nuevo>"` y `PERSIST` (defensa ante un TTL heredado).
+
+Consecuencia funcional: **solo puede existir un enlace de recuperación vigente por administrador**; pedir uno nuevo invalida los anteriores de inmediato, antes de que expire su TTL. El consumo por Lua también elimina el miembro correspondiente del set.
+
+### Ejemplos `redis-cli`
 ```bash
-# Set
-HSET user:admin username "admin" password_hash "$2b$12$LJ3m4ys..." email "admin@bannedbyabrejeet.local" created_at 1725484800
+# Estado de inicialización y credenciales
+GET admin:initialized
+GET admin:credentials
+TTL admin:credentials             # -1: permanente
 
-# Get
-HGETALL user:admin
+# Listar tokens vigentes
+KEYS reset_token:*
 
-# TTL opcional (sesión activa)
-TTL user:admin
-```
+# Verificar y consultar expiración
+EXISTS "reset_token:<token>"
+TTL "reset_token:<token>"          # 1..900 mientras sea válido; -2 al expirar
 
-### Equivalente `redis-py` (Python)
-```python
-import redis
+# Índice de tokens emitidos (sin TTL)
+SMEMBERS admin:reset_tokens
+SCARD admin:reset_tokens
+TTL admin:reset_tokens            # -1: permanente
 
-r = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True)
-
-# Set
-r.hset('user:admin', mapping={
-    'username': 'admin',
-    'password_hash': '$2b$12$LJ3m4ys...',
-    'email': 'admin@bannedbyabrejeet.local',
-    'created_at': str(1725484800),
-})
-
-# Get
-creds = r.hgetall('user:admin')
-# {'username': 'admin', 'password_hash': '$2b$12$LJ3m4ys...', ...}
+# El reset exitoso consume el token y lo saca del índice
+DEL "reset_token:<token>"
+SREM admin:reset_tokens "<admin_id>|<token>"
 ```
 
 ---
@@ -518,7 +534,10 @@ messages = await r.xreadgroup(
 
 | Clave | Tipo | TTL | Política | Propietario |
 |---|---|---|---|---|
-| `user:admin` | Hash | Ninguno (persistente) | Nunca expira | Servicio 1 |
+| `admin:credentials` | String JSON | Ninguno (persistente) | Nunca expira | Servicio 1 |
+| `admin:initialized` | String | Ninguno (persistente) | Setup único atómico | Servicio 1 |
+| `admin:reset_tokens` | Set | Ninguno (persistente) | Un enlace vigente por admin | Servicio 1 |
+| `reset_token:<token>` | String JSON | 900 segundos | `SETEX`; consumo único | Servicio 1 |
 | `config:settings` | Hash | Ninguno | Persistente | Servicio 1 |
 | `config:whitelist` | Set | Ninguno | Persistente | Servicio 1 + 2 |
 | `failed:<IP>` | ZSET | `findtime` segundos | Auto-expira | Servicio 2 |

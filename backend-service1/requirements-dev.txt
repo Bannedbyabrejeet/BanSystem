@@ -1,0 +1,14 @@
+# Dependencias de desarrollo y pruebas del Servicio 1.
+# Instalar con:  pip install -r requirements.txt -r requirements-dev.txt
+
+-r requirements.txt
+
+pytest==8.3.4
+pytest-asyncio==0.25.2
+httpx==0.28.1
+# Redis emulado para correr la suite sin levantar Docker. Requiere el binario
+# nativo "lupa" para ejecutar los scripts Lua (fakeredis[lua]).
+# La opción recomendada sigue siendo levantar el Redis del proyecto:
+#   docker compose up -d redis
+#   TEST_REDIS_URL="redis://:TU_CONTRASENA@127.0.0.1:6379/15" pytest
+fakeredis[lua]==2.26.2
