@@ -1,3 +1,10 @@
+<!-- calidad:inicio -->
+![Calidad](https://img.shields.io/badge/Calidad-7%2F100-red) ![Cumple](https://img.shields.io/badge/Cumple-9%2F15-yellow) ![Aprobado](https://img.shields.io/badge/Aprobado-NO-red)
+
+**Calidad de servicios (heurístico):** índice **7/100** · cumple **9/15** · aprobado **NO** · capas **3**
+`SEC 1 · SQL 0 · DBG 0 · duplicación 9.9% · vistas 11 · tests 4`
+<!-- calidad:fin -->
+
 # BannedbyAbrejeet — Issue #5: autenticación de administrador
 
 Implementación de Backend A (FastAPI + Redis) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT y recuperación de contraseña. Esta entrega no incluye configuración UFW ni Servicio 2 (Flask).
