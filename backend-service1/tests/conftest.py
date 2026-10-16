@@ -105,12 +105,14 @@ def anyio_backend() -> str:
 
 @pytest.fixture(scope="session")
 def settings() -> Settings:
-    """Configuración de tests: bcrypt barato y TTL de 60 s."""
+    """Configuración de tests: Argon2 barato y TTL de 60 s."""
     return Settings(
         environment="testing",
         debug=True,
         jwt_secret="secreto-de-pruebas-bannedbyabrejeet-32bytes-minimo",
-        bcrypt_rounds=8,
+        argon2_time_cost=1,
+        argon2_memory_cost_kib=8_192,
+        argon2_parallelism=1,
         reset_token_ttl=60,
         cors_origins="http://localhost:3000",
         mail_mode="log",

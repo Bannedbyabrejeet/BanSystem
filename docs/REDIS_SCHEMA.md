@@ -50,7 +50,7 @@ reset_token:<token-opaco>
 |---|---|---|
 | `admin_id` | String UUID | Identificador inmutable usado como `sub` del JWT |
 | `username` | String | Nombre de usuario normalizado |
-| `password_hash` | String | Hash bcrypt de la contraseña |
+| `password_hash` | String | Hash Argon2id de la contraseña |
 | `email` | String | Correo normalizado para recuperación |
 | `created_at` | String ISO 8601 | Fecha de creación UTC |
 | `updated_at` | String ISO 8601 | Última actualización UTC |

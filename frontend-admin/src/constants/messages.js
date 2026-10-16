@@ -45,7 +45,7 @@ export const MESSAGES = {
   PASSWORD_UPPERCASE: 'Al menos una letra mayúscula.',
   PASSWORD_LOWERCASE: 'Al menos una letra minúscula.',
   PASSWORD_DIGIT: 'Al menos un número.',
-  PASSWORD_BYTES: 'Máximo 72 bytes (límite de bcrypt).',
+  PASSWORD_BYTES: 'Máximo 1024 bytes.',
   PASSWORD_MATCH: 'Las contraseñas no coinciden.',
 };
 

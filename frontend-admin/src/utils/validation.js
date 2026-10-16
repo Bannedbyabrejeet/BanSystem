@@ -9,7 +9,12 @@
 import { MESSAGES } from '../constants/messages';
 
 export const PASSWORD_MIN_LENGTH = 12;
-export const PASSWORD_MAX_BYTES = 72;
+/**
+ * Argon2id no trunca como bcrypt (que limitaba la contraseña a 72 bytes),
+ * pero se acota la longitud como defensa contra agotamiento de recursos
+ * durante el hashing. Debe coincidir con PASSWORD_MAX_BYTES del backend.
+ */
+export const PASSWORD_MAX_BYTES = 1024;
 
 /** Misma lista de contraseñas triviales que bloquea el backend. */
 const WEAK_PASSWORDS = new Set([

@@ -1,5 +1,7 @@
 # Issue #4: Setup Inicial de Infraestructura y Base de Datos
 
+> **Estado:** ✅ Completada (2026-10-16)
+
 ## Resumen
 
 Resolución completa del setup inicial de infraestructura con Redis como almacenamiento centralizado en memoria ultrarrápida para el sistema Bannedbyabrejeet.
@@ -46,7 +48,7 @@ El sistema requiere un motor de base de datos en memoria que proporcione:
 | # | Criterio | Estado | Evidencia |
 |---|----------|--------|-----------|
 | 1 | Motor BBDD (Redis) Dockerizado | ✅ Cumplido | Imagen `redis:7.2-alpine` en `docker-compose.yml` |
-| 2 | Almacenamiento centralizado de credenciales | ✅ Cumplido | Esquema `user:*` definido en `REDIS_SCHEMA.md` |
+| 2 | Almacenamiento centralizado de credenciales | ✅ Cumplido | Esquema `admin:*` y `reset_token:*` definido en `REDIS_SCHEMA.md` |
 | 3 | Almacenamiento de parámetros | ✅ Cumplido | Esquema `config:settings` definido en `REDIS_SCHEMA.md` |
 | 4 | Registros de IPs | ✅ Cumplido | Esquemas `ips:banned`, `ips:history`, `failed:<IP>` definidos |
 | 5 | Esquema Redis acordado | ✅ Cumplido | Documento `docs/REDIS_SCHEMA.md` completo |
@@ -413,6 +415,27 @@ docker volume inspect BanSystem_redis_data
 # Limpiar y recrear volumen (¡PERDERÁ DATOS!)
 docker compose down -v && docker compose up -d redis
 ```
+
+### El contenedor no publica el puerto 6379
+
+Si el contenedor Redis arranca pero no se alcanza por `127.0.0.1:6379` (por ejemplo, el backend falla con errores de autenticación contra Redis), es probable que **otro Redis del host ya ocupe ese puerto**. Es algo habitual con servicios del sistema que traen su propio Redis (por ejemplo `ntopng`):
+
+```bash
+# ¿Quién escucha en 6379?
+sudo ss -ltnp | grep 6379
+
+# Si es un redis-server del sistema, deténgalo y deshabilítelo
+sudo systemctl stop redis-server
+sudo systemctl disable redis-server
+
+# Recrear el contenedor para que publique el puerto limpio
+docker compose down && docker compose up -d redis
+docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning PING   # -> PONG
+```
+
+Alternativa: mover el proyecto a otro puerto (por ejemplo `6380`) ajustando `REDIS_PORT` en `.env` y el mapeo en `docker-compose.yml`.
+
+> Nota: un `--requirepass` con valor vacío produce `FATAL CONFIG FILE ERROR ... 'requirepass' wrong number of arguments`. Verifique que `REDIS_PASSWORD` esté definido en `.env` antes de recrear el contenedor.
 
 ---
 

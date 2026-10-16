@@ -369,3 +369,34 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
   * **4a. Tiempo expirado:** Si la diferencia es mayor a la ventana, reinicia el registro dejando el contador en 1 y actualizando la marca de tiempo.
 * **Postcondiciones:** Monitoreo coherente enfocado en ataques de fuerza bruta rápidos.
 
+---
+
+## 4. Estado de Implementación (actualizado 2026-10-16)
+
+> Apéndice de seguimiento. No modifica el contrato de alcance definido en las secciones anteriores; solo refleja el avance real del repositorio. Detalle por issue en [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
+
+### Cerrado
+
+- **Infraestructura (Issue #4):** Redis 7.2 dockerizado con persistencia AOF + RDB, healthcheck, contraseña y script de verificación.
+- **Esquema Redis (Sync Point 1):** `docs/REDIS_SCHEMA.md`.
+- **Contrato de desbaneo (Issue #2 / Sync Point 2):** `docs/contrato-desbaneo.yaml` (stream `security:events:unban`).
+- **Estrategia multi-framework de frontends (Issue #1 / Sync Point 3):** `docs/ADR001-UnificacionMultifrontend.md`.
+- **Autenticación de administrador (Issue #5):** Épica 1 completa — setup único, login, sesión JWT, recuperación de contraseña con TTL y política de contraseñas.
+- **Hash de contraseñas (Issue #24):** Argon2id (`argon2-cffi`) en reemplazo de bcrypt.
+- **Correo:** entrega real por SMTP (probado con Gmail) además del modo `log`.
+
+### Pendiente
+
+- **Épica 2 (configuración):** endpoints y vista de parámetros de baneo (Issue #6); ventana temporal o *findtime* (US-09); lista blanca (US-08).
+- **Épica 3 (logs SSH):** parser y visor (Issue #8).
+- **Épica 4 (baneo automático):** motor de reglas y bloqueo con UFW (Issue #8), dependiente del spike #3.
+- **Épica 5 (gestión de IPs):** historial, estado y desbaneo manual (Issue #7).
+- **Servicio 2 (Flask) y Frontend B (Vue):** no iniciados.
+
+### Estado de tareas por desarrollador
+
+| Área | Tareas cerradas | Tareas pendientes |
+|---|---|---|
+| Desarrollador 1 | INFRA-01, BACK1-01, FRONT-01 | BACK1-02, BACK1-03, FRONT-02, FRONT-03 |
+| Desarrollador 2 | — | BACK2-01, BACK2-02, BACK2-03, BACK2-04, FRONT-04, FRONT-05 |
+
