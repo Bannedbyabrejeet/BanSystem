@@ -1,4 +1,4 @@
-"""Pruebas de las primitivas criptográficas (bcrypt, JWT, tokens)."""
+"""Pruebas de las primitivas criptográficas (Argon2id, JWT, tokens)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import jwt
 import pytest
 
 from app.core.security import (
+    PASSWORD_MAX_BYTES,
     ExpiredTokenError,
     InvalidTokenError,
     PasswordPolicyError,
@@ -21,21 +22,24 @@ from app.core.security import (
     verify_password,
 )
 
+#: Parámetros de Argon2id baratos para que la suite sea rápida.
+CHEAP_ARGON2 = {"time_cost": 1, "memory_cost_kib": 8_192, "parallelism": 1}
+
 
 # ----------------------------------------------------------------------
 # Contraseñas
 # ----------------------------------------------------------------------
-def test_hash_password_produces_bcrypt_hash() -> None:
-    hashed = hash_password("Banned2024Admin", rounds=4)
-    assert hashed.startswith("$2b$")
+def test_hash_password_produces_argon2id_hash() -> None:
+    hashed = hash_password("Banned2024Admin", **CHEAP_ARGON2)
+    assert hashed.startswith("$argon2id$")
     assert "Banned2024Admin" not in hashed
     assert verify_password("Banned2024Admin", hashed) is True
     assert verify_password("otra-clave", hashed) is False
 
 
 def test_hash_is_salted() -> None:
-    primero = hash_password("Banned2024Admin", rounds=4)
-    segundo = hash_password("Banned2024Admin", rounds=4)
+    primero = hash_password("Banned2024Admin", **CHEAP_ARGON2)
+    segundo = hash_password("Banned2024Admin", **CHEAP_ARGON2)
     assert primero != segundo  # sal aleatoria distinta en cada hash
 
 
@@ -45,9 +49,9 @@ def test_verify_password_with_none_or_corrupted_hash_returns_false() -> None:
     assert verify_password("cualquiera", "") is False
 
 
-def test_hash_password_rejects_more_than_72_bytes() -> None:
+def test_hash_password_rejects_more_than_max_bytes() -> None:
     with pytest.raises(PasswordPolicyError):
-        hash_password("a" * 73, rounds=4)
+        hash_password("a" * (PASSWORD_MAX_BYTES + 1), **CHEAP_ARGON2)
 
 
 @pytest.mark.parametrize(
@@ -74,8 +78,8 @@ def test_password_policy_violations_are_descriptive() -> None:
     assert any("mayúscula" in violation for violation in cortas)
     assert any("número" in violation for violation in cortas)
 
-    larga = password_policy_violations("A1" + "a" * 72)
-    assert any("72 bytes" in violation for violation in larga)
+    larga = password_policy_violations("A1" + "a" * PASSWORD_MAX_BYTES)
+    assert any(f"{PASSWORD_MAX_BYTES} bytes" in violation for violation in larga)
 
     assert any(
         "común" in violation

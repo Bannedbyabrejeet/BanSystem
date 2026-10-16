@@ -82,8 +82,15 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
     # Contraseñas y tokens de recuperación
     # ------------------------------------------------------------------
-    #: Coste de bcrypt. 12 es el equilibrio recomendado entre seguridad y latencia.
-    bcrypt_rounds: int = Field(default=12, ge=8, le=16)
+    #: Iteraciones de Argon2id. 3 es el valor por defecto de la librería y
+    #: supera el mínimo de 2 recomendado por OWASP.
+    argon2_time_cost: int = Field(default=3, ge=1, le=10)
+    #: Memoria del algoritmo en KiB (65536 = 64 MiB). OWASP recomienda
+    #: al menos 19456 KiB; el doble de ese mínimo da margen de crecimiento.
+    argon2_memory_cost_kib: int = Field(default=65_536, ge=8_192, le=1_048_576)
+    #: Hilos concurrentes de Argon2id. OWASP recomienda 1 para entornos
+    #: con pocos núcleos; 4 es el valor por defecto de la librería.
+    argon2_parallelism: int = Field(default=4, ge=1, le=16)
     #: TTL nativo de Redis (comando SETEX) para ``reset_token:<token>``.
     reset_token_ttl: int = Field(
         default=900,
@@ -156,6 +163,16 @@ class Settings(BaseSettings):
         if any(char in value for char in "\r\n"):
             raise ValueError("SMTP_USERNAME es inválido")
         return value
+
+    @model_validator(mode="after")
+    def _validate_argon2_costs(self) -> "Settings":
+        # Regla del formato Argon2: la memoria debe ser al menos 8 × paralelismo.
+        if self.argon2_memory_cost_kib < 8 * self.argon2_parallelism:
+            raise ValueError(
+                "ARGON2_MEMORY_COST_KIB debe ser al menos 8 × ARGON2_PARALLELISM "
+                "(regla de especificación de Argon2)"
+            )
+        return self
 
     @model_validator(mode="after")
     def _validate_runtime_consistency(self) -> "Settings":
