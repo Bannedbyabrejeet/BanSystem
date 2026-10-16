@@ -35,8 +35,8 @@ def get_settings_from_app(request: Request) -> Settings:
     """Configuración de la instancia de la aplicación en ejecución.
 
     Se lee de ``app.state`` en lugar del singleton global para que las
-    pruebas puedan correr con su propia configuración (bcrypt barato, TTL
-    corto) sin tocar el entorno del proceso.
+    pruebas puedan correr con su propia configuración (hash Argon2 barato,
+    TTL corto) sin tocar el entorno del proceso.
     """
     return request.app.state.settings
 

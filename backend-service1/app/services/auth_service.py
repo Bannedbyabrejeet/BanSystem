@@ -5,7 +5,7 @@ Responsabilidades:
 * **CU-01.2 / US-01.2** — setup único e irrepetible del administrador.
   La comprobación y la escritura se ejecutan en un único script Lua, de
   modo que dos peticiones simultáneas no puedan crear dos cuentas.
-* **US-01** — autenticación contra el hash bcrypt almacenado en Redis.
+* **US-01** — autenticación contra el hash Argon2id almacenado en Redis.
 * **US-01.3** — emisión de tokens de recuperación.
 * **US-10** — expiración estricta: el token se crea con ``SETEX`` y Redis
   lo elimina solo al cumplirse el TTL. Ningún proceso del backend hace
@@ -93,7 +93,7 @@ return 1
 # KEYS[1] = reset_token:<token>
 # KEYS[2] = admin:credentials
 # KEYS[3] = admin:reset_tokens
-# ARGV[1] = nuevo password_hash (bcrypt)
+# ARGV[1] = nuevo password_hash (Argon2id)
 # ARGV[2] = updated_at ISO 8601
 # ARGV[3] = token opaco
 #

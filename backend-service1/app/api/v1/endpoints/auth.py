@@ -124,7 +124,7 @@ async def setup_admin(payload: SetupRequest, service: AuthServiceDep) -> AdminPu
     response_model=TokenResponse,
     summary="Iniciar sesión",
     description=(
-        "Valida las credenciales contra el hash bcrypt guardado en Redis y devuelve "
+        "Valida las credenciales contra el hash Argon2id guardado en Redis y devuelve "
         "un JWT HS256 válido por `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`. Con credenciales "
         f"incorrectas responde `401` con el mensaje `{constants.INVALID_CREDENTIALS}`."
     ),
@@ -257,7 +257,7 @@ async def verify_reset_token(token: str, service: AuthServiceDep) -> VerifyReset
     response_model=MessageResponse,
     summary="Establecer la nueva contraseña",
     description=(
-        "Consume el token (un solo uso), guarda el nuevo hash bcrypt e incrementa "
+        "Consume el token (un solo uso), guarda el nuevo hash Argon2id e incrementa "
         "`session_version`, lo que invalida cualquier sesión abierta antes del cambio. "
         f"Responde `{constants.PASSWORD_UPDATED}`."
     ),
