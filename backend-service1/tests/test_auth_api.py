@@ -48,7 +48,7 @@ async def test_setup_creates_the_single_admin_account(client) -> None:
     assert (await client.get("/api/v1/auth/status")).json() == {"initialized": True}
 
 
-async def test_setup_persists_bcrypt_hash_without_ttl(client, redis_client: Redis) -> None:
+async def test_setup_persists_argon2id_hash_without_ttl(client, redis_client: Redis) -> None:
     await client.post(
         "/api/v1/auth/setup",
         json={
@@ -62,7 +62,7 @@ async def test_setup_persists_bcrypt_hash_without_ttl(client, redis_client: Redi
     raw = await redis_client.get(ADMIN_CREDENTIALS)
     assert raw is not None
     assert ADMIN_PASSWORD not in raw  # nunca en claro
-    assert '"$2b$' in raw or '"$2a$' in raw or '"$2y$' in raw
+    assert '"$argon2id$' in raw
     assert int(await redis_client.ttl(ADMIN_CREDENTIALS)) == -1  # permanente
     assert await redis_client.exists(ADMIN_INITIALIZED) == 1
 

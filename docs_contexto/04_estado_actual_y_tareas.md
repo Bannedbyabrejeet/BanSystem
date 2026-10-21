@@ -1,104 +1,202 @@
 # Bannedbyabrejeet: Estado Actual y Tareas Pendientes
 
-## Análisis Basado en las 10 Issues
+> **Última actualización:** 2026-10-16
+> **Rama activa:** `24-cambiar-la-implementación-de-bcrypt-a-argon2id`
+> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa sobre Redis dockerizado.
 
-Este documento detalla el estado actual del proyecto basándose en las 10 Issues definidas, identificando spikes arquitectónicos, tareas críticas y la división de trabajo entre los desarrolladores.
-
----
-
-## Spikes Arquitectónicos (Arquitectural Spikes)
-
-### Issue #1: Estrategia de Integración de Frontends (Spike Arquitectónico)
-- **Estado:** Pendiente de resolución (primera tarea del Sprint)
-- **Objetivo:** Definir la estrategia técnica para unificar vistas en dos frameworks distintos.
-- **Decisión pendiente:** Arquitectura de Microfrontends (Module Federation o Single-SPA) vs. Proxy inverso (Nginx) con enrutamiento por rutas (/admin para Frontend A, /logs para Frontend B).
-- **Resultado esperado:** Documento de diseño arquitectónico cargado en wiki/docs del repositorio.
-
-### Issue #2: Definición de Comunicación Inter-Servicios (Spike Arquitectónico)
-- **Estado:** Pendiente de resolución
-- **Objetivo:** Establecer el canal de transferencia de datos para desbaneo manual entre Servicio 1 y Servicio 2.
-- **Opciones en análisis:** 
-  - Pub/Sub (Mensajería) de Redis
-  - Llamadas HTTP REST directas entre servicios
-- **Resultado esperado:** Diagrama de secuencia UML y documento YAML/JSON con el contrato provisional.
-
-### Issue #3: Privilegios de Docker y Ruta de Logs SSH (Spike Técnico)
-- **Estado:** Pendiente de resolución
-- **Objetivo:** Garantizar acceso del sistema a recursos críticos del host operativo.
-- **Preguntas clave:**
-  - ¿Servicio 2 correrá en el Host o dentro de un contenedor Docker?
-  - Si Docker: manejo de permisos CAP_NET_ADMIN y acceso al socket del host para UFW.
-  - Ruta exacta de logs SSH (/var/log/auth.log, /var/log/secure, o journalctl).
-- **Resultado esperado:** Script de Docker Compose draft validando montaje y permisos.
-
-### Issue #4: Setup Inicial de Infraestructura y Base de Datos
-- **Estado:** Tarea crítica / Pendiente de inicio
-- **Objetivo:** Desplegar Redis dockerizado como almacenamiento centralizado.
-- **Alcance incluye:** Ficheros Dockerfile y docker-compose.yml para Redis, configuración de persistencia (AOF/RDB).
-- **Criterios de aceptación:**
-  - Motor de BBDD (Redis) obligatoriamente Dockerizado.
-  - Almacenamiento centralizado de credenciales, parámetros y registros de IPs.
-  - Esquema en Redis acordado en conjunto para comunicación entre servicios.
-- **Evidencia esperada:** Archivo docker-compose.yml funcional y captura de conexión mediante redis-cli.
+Este documento reemplaza las estimaciones iniciales por el **estado real del repositorio**. Indica qué issues están cerradas, cuáles en curso y qué queda por hacer, con la evidencia correspondiente.
 
 ---
 
-## Tareas Críticas y División de Desarrollo
+## 1. Resumen de Issues
+
+| Issue | Título | Estado | Evidencia |
+|---|---|---|---|
+| **#1** | Estrategia de integración de frontends (spike) | ✅ Resuelta | `docs/ADR001-UnificacionMultifrontend.md` |
+| **#2** | Comunicación inter-servicios / desbaneo (spike) | ✅ Definida | `docs/contrato-desbaneo.yaml`, `docs/REDIS_SCHEMA.md` |
+| **#3** | Privilegios de Docker y ruta de logs SSH (spike) | ⏳ Pendiente | — |
+| **#4** | Setup de infraestructura y base de datos (Redis) | ✅ Completada | `docker-compose.yml`, `redis/redis.conf`, `scripts/verify_redis.sh`, `docs/DOCKER_REDIS.md` |
+| **#5** | Autenticación de administrador | ✅ Completada | `backend-service1/`, `frontend-admin/`, `README.md` |
+| **#6** | Parámetros de baneo (API + vista) | ⏳ Pendiente | — |
+| **#7** | IPs baneadas, historial y desbaneo manual | ⏳ Pendiente | — |
+| **#8** | Servicio 2 (parser SSH + UFW) y visor de logs | ⏳ Pendiente | — |
+| **#24** | Migración de bcrypt a Argon2id | ✅ Completada | `backend-service1/app/core/security.py` |
+
+**Leyenda:** ✅ Cerrada · 🚧 En curso · ⏳ Pendiente
+
+---
+
+## 2. Lo implementado (detalle)
+
+### 2.1 Infraestructura Redis — Issue #4
+
+- Redis **7.2-alpine** dockerizado en el contenedor `bannedbyabrejeet_redis`.
+- Publicado en **`127.0.0.1:6379`** (solo loopback del host); el backend corre en la máquina y lo alcanza por loopback, no por una red de Docker.
+- Persistencia **híbrida AOF + RDB** sobre el volumen nombrado `redis_data` (`appendonly yes`, snapshots `900/1`, `300/10`, `60/10000`).
+- Contraseña obligatoria vía `REDIS_PASSWORD` (`--requirepass`, inyectada desde `.env`).
+- Healthcheck nativo (`redis-cli ... ping`) y script de verificación `scripts/verify_redis.sh`.
+- Esquema de claves completo y acordado inter-servicios en `docs/REDIS_SCHEMA.md`.
+
+### 2.2 Autenticación de administrador — Issue #5
+
+Claves Redis (detalle en `docs/REDIS_SCHEMA.md`):
+
+- `admin:credentials`: string JSON persistente (sin TTL) con `admin_id`, `username`, `password_hash`, `email`, timestamps y `session_version`.
+- `admin:initialized`: marcador permanente sin TTL.
+- `admin:reset_tokens`: set sin TTL que indexa los tokens emitidos (`<admin_id>|<token>`) para revocar enlaces anteriores.
+- `reset_token:<token>`: string JSON temporal creado con `SETEX` y TTL de **900 s** (configurable con `RESET_TOKEN_TTL`).
+
+Comportamiento:
+
+- **Setup único y atómico** mediante script Lua: comprueba `admin:initialized` y `admin:credentials` y escribe ambas en una sola operación. Peticiones simultáneas no pueden crear dos administradores (la segunda recibe `409`).
+- **Login con JWT** firmado en HMAC-SHA256, con `iss`, `aud`, `sub`, `jti`, `iat`, `nbf`, `exp`, rol y `session_version`.
+- **Recuperación de contraseña**: token aleatorio opaco de 256 bits; solo existe **un enlace vigente** por administrador. El reset incrementa `session_version`, de modo que todos los JWT previos dejan de ser válidos.
+- **Política de contraseñas**: mínimo 12 caracteres, al menos una mayúscula, una minúscula y un dígito, rechazo de contraseñas comunes y tope de **1024 bytes**.
+
+Endpoints expuestos (bajo `/api/v1`):
+
+| Método | Ruta | Resultado |
+|---|---|---|
+| `GET` | `/auth/status` | `{ "initialized": bool }` |
+| `POST` | `/auth/setup` | Crea la cuenta única; después responde `409` |
+| `POST` | `/auth/login` | JWT; credenciales incorrectas: `401` |
+| `POST` | `/auth/forgot-password` | Crea el token con `SETEX` y envía el enlace |
+| `GET` | `/auth/verify-reset-token/{token}` | Indica si Redis todavía conserva el token |
+| `POST` | `/auth/reset-password` | Consume el token, cambia el hash e invalida sesiones previas |
+| `GET` | `/auth/me` | Valida el JWT y su versión contra Redis |
+
+### 2.3 Migración de bcrypt a Argon2id — Issue #24
+
+- Dependencia **`argon2-cffi==25.1.0`** en lugar de `bcrypt`.
+- Algoritmo **Argon2id** (`argon2.Type.ID`) con `m=65536 KiB` (64 MiB), `t=3`, `p=4`, `hash_len=32`, `salt_len=16` (por encima del mínimo recomendado por OWASP).
+- Parámetros configurables con `ARGON2_TIME_COST`, `ARGON2_MEMORY_COST_KIB` y `ARGON2_PARALLELISM`; el validador exige `memory_cost_kib >= 8 × parallelism`.
+- Se elimina el truncamiento a 72 bytes propio de bcrypt; el límite de 1024 bytes queda solo como defensa anti-DoS durante el hashing.
+- Formato del hash en runtime: `$argon2id$v=19$m=65536,t=3,p=4$...`.
+
+### 2.4 Correo electrónico (SMTP)
+
+- Dos modos según `MAIL_MODE`:
+  - `log` (por defecto, desarrollo): escribe el enlace completo en el log del backend.
+  - `smtp`: entrega el mensaje con `smtplib`, soportando STARTTLS (`SMTP_USE_TLS`) o SSL directo (`SMTP_USE_SSL`).
+- El envío se ejecuta en un hilo aparte para no bloquear el event loop de FastAPI.
+- Probado contra **Gmail** (`smtp.gmail.com:587` con contraseña de aplicación). El enlace se envía siempre al **correo del administrador registrado**, y `MAIL_FROM` debe coincidir con `SMTP_USERNAME`.
+- **Corrección aplicada:** `mail_service.py` construía las cabeceras con objetos `Header`, que fallan en Python 3.12 (`'Header' object is not subscriptable`). Ahora se pasan `str` y es `EmailMessage` el que aplica RFC 2047. El bug estaba latente porque los tests corren con `MAIL_MODE=log`.
+
+### 2.5 Frontend A (Administración) — React
+
+- **React 18 + Vite 5 + React Router 6** en `frontend-admin/`.
+- Vistas: `/setup`, `/login`, `/forgot-password`, `/reset-password` y `/dashboard`.
+- JWT en `sessionStorage` (se pierde al cerrar la pestaña); guardas `ProtectedRoute` / `PublicOnlyRoute`.
+- Cliente Axios con `ApiError` y mensajes idénticos a los del backend (`app/core/constants.py` ↔ `src/constants/messages.js`).
+- El Dashboard muestra la sesión activa; las secciones de parámetros, IPs y logs quedan como marcadores de las issues #6, #7 y #8.
+
+### 2.6 Pruebas
+
+- **48 tests** en `backend-service1/tests/` (seguridad + API de autenticación).
+- Si no se define `TEST_REDIS_URL`, se ejecutan 18 y se omiten 30 (las que necesitan Redis).
+- Requieren un **Redis aparte del de desarrollo** (por ejemplo `redis://127.0.0.1:6399/15`), porque hacen `FLUSHDB`.
+
+---
+
+## 3. Lo pendiente (detalle)
+
+### Issue #3 — Privilegios de Docker y ruta de logs SSH
+
+- Definir si el Servicio 2 corre en el host o en un contenedor.
+- Si es contenedor: manejo de `CAP_NET_ADMIN`, `network_mode: host` y acceso al socket/`ufw`.
+- Ruta exacta de logs SSH (`/var/log/auth.log`, `/var/log/secure` o `journalctl`).
+
+### Issue #6 — Parámetros de baneo
+
+- Persistir `config:settings` (intentos fallidos, tiempo de baneo y ventana de tolerancia) vía Servicio 1.
+- Endpoints `GET`/`PUT` de configuración y vista en el Dashboard.
+- Validación de enteros positivos estrictos.
+
+### Issue #7 — IPs baneadas, historial y desbaneo
+
+- Claves `ips:banned`, `ips:history` y `failed:<IP>`.
+- Endpoints para listar IPs activas, historial y solicitar desbaneo.
+- Vista con clasificación "Baneadas en el momento" / "Historial".
+
+### Issue #8 — Servicio 2 (Flask) y visor de logs
+
+- Parser de logs SSH (intentos fallidos y exitosos).
+- Motor de reglas con ventana temporal (`findtime`).
+- Bloqueo/desbloqueo con **UFW**.
+- Broker de desbaneo `security:events:unban` (contrato en `docs/contrato-desbaneo.yaml`).
+- Frontend B (Vue) con el visor de logs formateado y el control de desbaneo manual.
+
+### Otros pendientes menores
+
+- **Lista blanca (US-08):** `config:whitelist`, con `127.0.0.1` protegida e inmutable.
+- **Ventana temporal (US-09):** parámetro `findtime` en la evaluación del Servicio 2.
+- **Frontend B (Vue):** aún no iniciado.
+
+> Nota: el TTL estricto de tokens (US-10) **ya está implementado** con `SETEX` en la Issue #5.
+
+---
+
+## 4. División de tareas (roadmap)
 
 ### Desarrollador 1: Infraestructura, API Web y Gestión de Configuración
-**Enfoque:** Configurar la base del sistema (Redis), desarrollar el Servicio 1 (FastAPI) y la interfaz de autenticación/parámetros (Frontend A).
 
-| ID | Tarea | Descripción | Dependencias |
-|----|-------|-------------|--------------|
-| **INFRA-01** | Setup de Redis en Docker | Configurar y levantar contenedor Docker con Redis | Issue #4 (Configuración inicial) |
-| **BACK1-01** | Autenticación de Administrador | Validación inicio sesión, manejo de sesiones, almacenamiento seguro en Redis | Issue #4 |
-| **BACK1-02** | API de Configuración de Baneos | Endpoints para consultar/actualizar intentos y tiempo de baneo | Issue #5 (Autenticación) |
-| **BACK1-03** | API de Historial y Monitoreo de IPs | Rutas para obtener IPs registradas, baneadas e historial | Issue #5 |
-| **FRONT-01** | Pantalla de Login | Vista de inicio de sesión previa a configuración | BACK1-01 |
-| **FRONT-02** | Formulario de Parámetros de Baneo | Dashboard para modificar intentos y tiempo de baneo | BACK1-02 |
-| **FRONT-03** | Vista de Historial y Estado de IPs | Componentes para visualizar IPs sancionadas y registro histórico | BACK1-03 |
+| ID | Tarea | Estado | Dependencias |
+|----|-------|--------|--------------|
+| **INFRA-01** | Setup de Redis en Docker | ✅ Completada | Issue #4 |
+| **BACK1-01** | Autenticación de Administrador | ✅ Completada | Issue #4 |
+| **BACK1-02** | API de Configuración de Baneos | ⏳ Pendiente | Issue #5 |
+| **BACK1-03** | API de Historial y Monitoreo de IPs | ⏳ Pendiente | Issue #5 |
+| **FRONT-01** | Pantalla de Login (y setup/recuperación) | ✅ Completada | BACK1-01 |
+| **FRONT-02** | Formulario de Parámetros de Baneo | ⏳ Pendiente | BACK1-02 |
+| **FRONT-03** | Vista de Historial y Estado de IPs | ⏳ Pendiente | BACK1-03 |
 
 ### Desarrollador 2: Motor de Seguridad, Parser SSH e Integración UFW
-**Enfoque:** Desarrollar el Servicio 2 principal (Flask), interacción con firewall y módulo de visualización (Frontend B).
 
-| ID | Tarea | Descripción | Dependencias |
-|----|-------|-------------|--------------|
-| **BACK2-01** | Lector y Parser de Logs SSH | Módulo de lectura continua sobre logs SSH para detectar intentos fallidos/éxitos | Issue #3 (Rutas y permisos) |
-| **BACK2-02** | Motor de Reglas y Evaluación | Conectar con Redis para leer parámetros y detectar IPs que superan umbrales | Issue #5 (Parámetros en Redis), Issue #2 (Contrato inter-servicios) |
-| **BACK2-03** | Módulo de Bloqueo Automático (UFW) | Integración con UFW para ejecutar comandos de bloqueo sobre IPs infractoras | Issue #3 (Permisos Docker), Issue #8 (Motor detectando ataques) |
-| **BACK2-04** | Módulo de Desbaneo Manual (UFW) | Lógica para recibir órdenes de desbloqueo, remover IP en UFW y eliminar timeout | Issue #2 (Contrato API), Issue #8 (Endpoints ready) |
-| **FRONT-04** | Visor de Logs SSH Formateado | Interfaz para mostrar flujo de logs SSH de manera clara y estructurada | BACK2-01 (Parser operativo) |
-| **FRONT-05** | Control de Desbaneo Manual | Botón/acción dentro de la interfaz para solicitar desbloqueo de IP específica | BACK2-04 (Desbaneo implementado) |
-
----
-
-## Hitos de Coordinación Conjunta (Sync Points)
-
-Estos son los puntos de sincronización críticos entre ambos desarrolladores:
-
-1. **Definición de Esquema en Redis:** Acordar la estructura de claves y datos en Redis para comunicación transparente entre Servicio 1 y Servicio 2. (Dependencia cruzada entre Desarrollador 1 y 2)
-
-2. **Definición de Contrato de API:** Establecer el formato de las peticiones para el desbaneo manual entre el Servicio 1 y el Servicio 2. Requiere definiciones de Issue #2.
-
-3. **Integración Frontend:** Acordar la estrategia para unificar las vistas desarrolladas en frameworks distintos. Requiere resolución de Issue #1.
+| ID | Tarea | Estado | Dependencias |
+|----|-------|--------|--------------|
+| **BACK2-01** | Lector y Parser de Logs SSH | ⏳ Pendiente | Issue #3 |
+| **BACK2-02** | Motor de Reglas y Evaluación | ⏳ Pendiente | Issue #3, #5, #6 |
+| **BACK2-03** | Módulo de Bloqueo Automático (UFW) | ⏳ Pendiente | Issue #3 |
+| **BACK2-04** | Módulo de Desbaneo Manual (UFW) | ⏳ Pendiente | Issue #2, #7 |
+| **FRONT-04** | Visor de Logs SSH Formateado | ⏳ Pendiente | BACK2-01 |
+| **FRONT-05** | Control de Desbaneo Manual | ⏳ Pendiente | BACK2-04 |
 
 ---
 
-## Resumen del Estado del Proyecto
+## 5. Hitos de Coordinación Conjunta (Sync Points)
 
-### Progreso Estimado
-- **Infraestructura base:** Pendiente de setup (Issue #4). Es la tarea inicial que debe completarse antes de desarrollar cualquier otro componente.
-- **Spikes arquitectónicos:** Issues #1, #2 y #3 deben resolverse al comienzo del proyecto para definir las bases técnicas.
-- **Desarrollo backend:** Dividido entre Servicio 1 (autenticación y configuración) y Servicio 2 (motor de seguridad), con avances paralelos una vez resueltos los spikes.
-- **Desarrollo frontend:** Dos módulos independientes (Administración y Operativo) que dependen del correcto funcionamiento de sus respectivos backends.
+1. **Definición de Esquema en Redis** — ✅ Resuelto: `docs/REDIS_SCHEMA.md` cubre credenciales, configuración, whitelist, contadores, baneos, historial y streams.
+2. **Definición de Contrato de API** — ✅ Resuelto: `docs/contrato-desbaneo.yaml` (stream `security:events:unban`, grupo `ufw_workers`).
+3. **Integración Frontend** — ✅ Resuelto: `docs/ADR001-UnificacionMultifrontend.md` (proxy inverso Nginx con enrutamiento por rutas + design tokens compartidos).
 
-### Rutas Críticas
-1. **Issue #4 → Issue #5 → Issue #6:** La infraestructura Redis debe levantarse antes de poder implementar autenticación y configuración.
-2. **Issue #3:** Definir permisos Docker y rutas de logs es esencial antes del parser SSH (BACK2-01).
-3. **Issue #1 y #2:** Los spikes arquitectónicos deben resolverse temprano para evitar reworks en la integración de frontends y comunicación inter-servicios.
+---
 
-### Recomendaciones para Siguientes Sprintes
-1. Priorizar el levantamiento de la infraestructura Docker/Redis (Issue #4).
-2. Resolver los spikes arquitectónicos (#1, #2, #3) en paralelo al setup inicial.
-3. Establecer el esquema de Redis acordado antes de implementar BACK1-01 y BACK2-02.
-4. Definir la estrategia de enrutamiento de frontends antes de comenzar el desarrollo UI significativo.
+## 6. Cómo verificar el estado actual
+
+```bash
+# 1. Redis arriba y respondiendo
+docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning PING   # -> PONG
+
+# 2. Backend arriba
+curl -s http://localhost:8000/health        # -> {"status":"ok",...,"redis":"up"}
+curl -s http://localhost:8000/api/v1/auth/status   # -> {"initialized":true}
+
+# 3. Tests del backend (Redis aparte requerido)
+cd backend-service1
+TEST_REDIS_URL="redis://127.0.0.1:6399/15" PYTHONPATH=.pylibs python -m pytest -q    # -> 48 passed
+```
+
+El hash almacenado debe comenzar por `$argon2id$`:
+
+```bash
+docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning \
+  GET admin:credentials | python3 -c "import sys,json;print(json.load(sys.stdin)['password_hash'])"
+```
+
+---
+
+## 7. Estado de la infraestructura local
+
+- Únicamente **Redis está dockerizado**; el backend (uvicorn) y el Frontend A (Vite) corren en la máquina.
+- El puerto **6379 del host debe quedar libre** para el contenedor. Si un Redis del sistema (por ejemplo el de `ntopng`) lo ocupa, el contenedor no podrá publicar el puerto; deténgalo (`sudo systemctl stop redis-server`) o mueva el proyecto a otro puerto.
+- `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP.

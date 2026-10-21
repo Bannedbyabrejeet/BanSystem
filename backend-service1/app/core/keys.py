@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Final
 
-#: Credenciales cifradas del administrador (hash bcrypt). Persistente.
+#: Credenciales cifradas del administrador (hash Argon2id). Persistente.
 ADMIN_CREDENTIALS: Final[str] = "admin:credentials"
 #: Marcador permanente que impide crear un segundo administrador.
 ADMIN_INITIALIZED: Final[str] = "admin:initialized"

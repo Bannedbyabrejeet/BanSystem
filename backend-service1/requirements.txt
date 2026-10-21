@@ -12,6 +12,6 @@ email-validator==2.2.0
 # Cliente asíncrono de Redis (redis.asyncio)
 redis==5.2.1
 
-# Criptografía: bcrypt para contraseñas, PyJWT para los tokens de sesión
-bcrypt==4.2.1
+# Criptografía: Argon2id para contraseñas, PyJWT para los tokens de sesión
+argon2-cffi==25.1.0
 PyJWT==2.10.1

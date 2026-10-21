@@ -9,15 +9,37 @@ Detalle completo en [`docs/EVALUACION.md`](docs/EVALUACION.md).
 
 Implementación de Backend A (FastAPI + Redis) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT y recuperación de contraseña. Esta entrega no incluye configuración UFW ni Servicio 2 (Flask).
 
+## Estado del proyecto
+
+Esta entrega corresponde a la **Issue #5 (autenticación de administrador)** y a la **Issue #24 (migración de bcrypt a Argon2id)**. Cubre el Servicio 1 (FastAPI) y el Frontend A (React); **no** incluye todavía el Servicio 2 (Flask), el Frontend B (Vue) ni la configuración de UFW.
+
+### Implementado
+
+- **Infraestructura (Issue #4):** Redis 7.2 dockerizado con persistencia AOF + RDB, healthcheck y `scripts/verify_redis.sh`.
+- **Autenticación (Issue #5):** setup único atómico, login con JWT, sesión validada contra `session_version` y recuperación de contraseña por correo (token opaco con TTL de 900 s).
+- **Hash de contraseñas (Issue #24):** Argon2id mediante `argon2-cffi`, en sustitución de bcrypt.
+- **Correo:** envío real por SMTP (probado con Gmail) o modo `log` para desarrollo.
+- **Frontend A:** vistas de setup, login, "olvidé mi contraseña", restablecer contraseña y dashboard.
+- **Decisiones y contratos:** [ADR 001](docs/ADR001-UnificacionMultifrontend.md) (estrategia multi-framework) y [contrato de desbaneo](docs/contrato-desbaneo.yaml).
+
+### Pendiente
+
+- **Issue #6:** API y vista de parámetros de baneo (intentos fallidos y tiempo de baneo).
+- **Issue #7:** API y vista de IPs baneadas, historial y desbaneo manual.
+- **Issue #8:** Servicio 2 (Flask) — parser de logs SSH, motor de reglas y bloqueo con UFW — y su visor en el Frontend B (Vue).
+- **Issue #3:** definición de privilegios de Docker y rutas de logs SSH.
+
+El detalle completo, con evidencia por issue, está en [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
+
 ## Arquitectura de autenticación
 
-- `admin:credentials`: string JSON persistente con `admin_id`, `username`, `password_hash` bcrypt, `email`, timestamps y `session_version`. No tiene TTL.
+- `admin:credentials`: string JSON persistente con `admin_id`, `username`, `password_hash` Argon2id, `email`, timestamps y `session_version`. No tiene TTL.
 - `admin:initialized`: marcador permanente sin TTL. El setup usa un script Lua atómico que comprueba esta clave y `admin:credentials` y escribe ambas en una sola operación; dos peticiones simultáneas no pueden crear dos administradores.
 - `admin:reset_tokens`: set sin TTL que indexa los tokens emitidos como `<admin_id>|<token>`. Permite revocar los enlaces anteriores al pedir uno nuevo, de modo que solo existe un enlace vigente por administrador.
 - `reset_token:<token>`: string JSON temporal creado con `SETEX` y TTL de `900` segundos. El token del enlace es aleatorio, opaco y tiene 256 bits de entropía.
 - JWT de acceso: firmado con HMAC SHA-256, con `iss`, `aud`, `sub`, `jti`, `iat`, `nbf`, `exp`, rol y versión de sesión. Tras un reset, la versión cambia y los JWT anteriores dejan de ser válidos.
 
-Las contraseñas nunca se guardan en claro. Bcrypt usa 12 rounds por defecto y el backend rechaza contraseñas de más de 72 bytes para evitar truncamiento silencioso.
+Las contraseñas nunca se guardan en claro. Argon2id usa por defecto 3 iteraciones, 64 MiB de memoria y 4 hilos (configurables vía `ARGON2_TIME_COST`, `ARGON2_MEMORY_COST_KIB` y `ARGON2_PARALLELISM`); los parámetros están por encima del mínimo recomendado por OWASP. A diferencia de bcrypt, Argon2id no trunca la contraseña, pero el backend la limita a 1024 bytes como defensa contra agotamiento de recursos durante el hashing.
 
 El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/REDIS_SCHEMA.md).
 
@@ -37,7 +59,7 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 │   │   │   ├── constants.py       # Mensajes contractuales
 │   │   │   ├── keys.py            # Nombres de claves Redis
 │   │   │   ├── logging.py
-│   │   │   └── security.py        # bcrypt, JWT, tokens opacos, política de contraseñas
+│   │   │   └── security.py        # Argon2id, JWT, tokens opacos, política de contraseñas
 │   │   ├── db/redis.py            # Cliente Redis con espera de arranque y ping
 │   │   ├── schemas/auth.py        # Modelos Pydantic de entrada/salida
 │   │   ├── services/
@@ -95,7 +117,23 @@ Redis queda en un contenedor porque necesita un servidor real con persistencia e
 
 3. Ajuste `FRONTEND_BASE_URL` a la URL pública del frontend y `CORS_ORIGINS` a los orígenes exactos permitidos, separados por comas.
 
-4. Para correo real, configure `MAIL_MODE=smtp`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_USE_TLS` y `MAIL_FROM`. Con `MAIL_MODE=log`, el backend registra el enlace completo en el log; este modo es únicamente para desarrollo.
+4. Para correo real, configure `MAIL_MODE=smtp`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_USE_TLS`, `SMTP_USE_SSL` y `MAIL_FROM`. Con `MAIL_MODE=log`, el backend registra el enlace completo en el log; este modo es únicamente para desarrollo.
+
+   Ejemplo con Gmail (requiere una *contraseña de aplicación*, no la del usuario):
+
+   ```env
+   MAIL_MODE=smtp
+   MAIL_FROM=tu-cuenta@gmail.com
+   MAIL_FROM_NAME=Bannedbyabrejeet
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USERNAME=tu-cuenta@gmail.com
+   SMTP_PASSWORD=contraseña-de-aplicación-de-16-caracteres
+   SMTP_USE_TLS=true
+   SMTP_USE_SSL=false
+   ```
+
+   `MAIL_FROM` debe coincidir con `SMTP_USERNAME`; de lo contrario Gmail reescribe o rechaza el remitente. El enlace se envía siempre al **correo registrado por el administrador**, no a `MAIL_FROM`.
 
 `JWT_SECRET` debe tener al menos 32 bytes. `RESET_TOKEN_TTL` usa 900 segundos por defecto y puede ajustarse, con un mínimo de 60 segundos.
 
@@ -260,4 +298,4 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
 
 Debe contener un único miembro con la forma `<admin_id>|<token>`, y `TTL admin:reset_tokens` debe devolver `-1`.
 
-Finalmente, `GET admin:credentials` debe mostrar un JSON cuyo campo `password_hash` comienza por `$2b$`; `TTL admin:credentials` debe ser `-1`, porque las credenciales son permanentes.
+Finalmente, `GET admin:credentials` debe mostrar un JSON cuyo campo `password_hash` comienza por `$argon2id$`; `TTL admin:credentials` debe ser `-1`, porque las credenciales son permanentes.

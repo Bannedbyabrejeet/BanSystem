@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 import smtplib
 import ssl
-from email.header import Header
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, make_msgid
 from urllib.parse import quote
@@ -94,9 +93,11 @@ class MailService:
     def _send_via_smtp(self, to_email: str, subject: str, body: str) -> None:
         """Entrega el mensaje usando el servidor SMTP configurado."""
         message = EmailMessage()
-        message["Subject"] = Header(subject, "utf-8")
+        # EmailMessage aplica RFC 2047 al serializar, así que sus cabeceras
+        # deben ser str (un objeto Header provoca TypeError en Python 3.12).
+        message["Subject"] = subject
         message["From"] = formataddr(
-            (str(Header(self.settings.mail_from_name, "utf-8")), self.settings.mail_from)
+            (self.settings.mail_from_name, self.settings.mail_from)
         )
         message["To"] = to_email
         message["Date"] = formatdate(localtime=True)

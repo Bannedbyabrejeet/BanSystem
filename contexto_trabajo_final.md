@@ -114,7 +114,7 @@ Cómo se comporta el sistema — calidad, restricciones técnicas, atributos de 
 
         Performance: API responde < 200ms (P95) bajo carga normal
         Disponibilidad: 99.9% uptime (excluyendo mantenimiento programado)
-        Seguridad: Contraseñas hasheadas (bcrypt), HTTPS obligatorio, rate limiting en auth
+        Seguridad: Contraseñas hasheadas (Argon2id), HTTPS obligatorio, rate limiting en auth
         Escalabilidad: Stateless services, BD con connection pooling, horizontal scaling ready
         Mantenibilidad: Cobertura tests ≥ 80%, ESLint/Prettier, documentación OpenAPI actualizada
         Usabilidad: Responsive (mobile-first), WCAG AA básico, feedback visual < 100ms

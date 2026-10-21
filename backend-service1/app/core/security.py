@@ -1,14 +1,17 @@
 """Primitivas criptográficas del Servicio 1.
 
-* Contraseñas: **bcrypt** (coste configurable, mínimo 8, por defecto 12).
+* Contraseñas: **Argon2id** (coste configurable: iteraciones, memoria en
+  KiB y paralelismo).
 * Tokens de recuperación: 256 bits de entropía con ``secrets.token_urlsafe``.
 * Sesión: **JWT HS256** firmado con ``JWT_SECRET`` que incluye ``iss``,
   ``aud``, ``sub``, ``jti``, ``iat``, ``nbf``, ``exp``, el rol y la
   ``session_version`` del administrador.
 
-Se usa la librería ``bcrypt`` de forma directa en lugar de ``passlib``:
-``passlib`` 1.7.4 (última versión) no es compatible con ``bcrypt >= 4.1``
-y su soporte está congelado. El algoritmo y el resultado son los mismos.
+Se usa ``argon2-cffi``, binding oficial de la implementación de referencia
+en C. Argon2id es el ganador del Password Hashing Competition y el modo
+recomendado por OWASP: combina los caminos 1i y 1d de Argon2, de modo que
+resiste tanto ataques masivos de GPU como ataques por canal lateral en
+caché.
 """
 
 from __future__ import annotations
@@ -20,15 +23,19 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
-import bcrypt
+import argon2
 import jwt
+from argon2 import PasswordHasher
+from argon2.exceptions import VerificationError
 
 from app.core.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 
-#: bcrypt trunca silenciosamente las contraseñas de más de 72 bytes.
-BCRYPT_MAX_PASSWORD_BYTES = 72
+#: Argon2id no trunca la entrada como hacía bcrypt (límite de 72 bytes),
+#: pero se acota la longitud de la contraseña como defensa contra
+#: agotamiento de CPU y memoria durante el hashing.
+PASSWORD_MAX_BYTES = 1024
 PASSWORD_MIN_LENGTH = 12
 #: Bytes de entropía del token opaco de recuperación (256 bits).
 RESET_TOKEN_BYTES = 32
@@ -103,9 +110,9 @@ def password_policy_violations(password: str) -> list[str]:
         violations.append("La contraseña debe incluir al menos un número.")
 
     size_in_bytes = len(password.encode("utf-8"))
-    if size_in_bytes > BCRYPT_MAX_PASSWORD_BYTES:
+    if size_in_bytes > PASSWORD_MAX_BYTES:
         violations.append(
-            f"La contraseña no puede superar {BCRYPT_MAX_PASSWORD_BYTES} bytes "
+            f"La contraseña no puede superar {PASSWORD_MAX_BYTES} bytes "
             f"(actual: {size_in_bytes} bytes)."
         )
 
@@ -126,54 +133,106 @@ def assert_password_policy(password: str) -> None:
 # ----------------------------------------------------------------------
 # Hash de contraseñas
 # ----------------------------------------------------------------------
-def hash_password(password: str, *, rounds: int | None = None, settings: Settings | None = None) -> str:
-    """Devuelve el hash bcrypt de ``password`` (nunca se guarda en claro)."""
+def _build_password_hasher(
+    *,
+    time_cost: int | None = None,
+    memory_cost_kib: int | None = None,
+    parallelism: int | None = None,
+    settings: Settings | None = None,
+) -> PasswordHasher:
+    """Crea un ``PasswordHasher`` Argon2id con los parámetros indicados.
+
+    Los valores no provistos se toman de la configuración activa.
+    """
+    active_settings = settings if settings is not None else get_settings()
+    return PasswordHasher(
+        time_cost=(
+            time_cost if time_cost is not None else active_settings.argon2_time_cost
+        ),
+        memory_cost=(
+            memory_cost_kib
+            if memory_cost_kib is not None
+            else active_settings.argon2_memory_cost_kib
+        ),
+        parallelism=(
+            parallelism
+            if parallelism is not None
+            else active_settings.argon2_parallelism
+        ),
+        hash_len=32,
+        salt_len=16,
+        type=argon2.Type.ID,
+    )
+
+
+def hash_password(
+    password: str,
+    *,
+    time_cost: int | None = None,
+    memory_cost_kib: int | None = None,
+    parallelism: int | None = None,
+    settings: Settings | None = None,
+) -> str:
+    """Devuelve el hash Argon2id de ``password`` (nunca se guarda en claro)."""
     size_in_bytes = len(password.encode("utf-8"))
-    if size_in_bytes > BCRYPT_MAX_PASSWORD_BYTES:
+    if size_in_bytes > PASSWORD_MAX_BYTES:
         raise PasswordPolicyError(
             [
-                f"La contraseña no puede superar {BCRYPT_MAX_PASSWORD_BYTES} bytes "
+                f"La contraseña no puede superar {PASSWORD_MAX_BYTES} bytes "
                 f"(actual: {size_in_bytes} bytes)."
             ]
         )
 
-    active_settings = settings if settings is not None else get_settings()
-    cost = rounds if rounds is not None else active_settings.bcrypt_rounds
-    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=cost))
-    return hashed.decode("utf-8")
-
-
-@lru_cache(maxsize=1)
-def _timing_equalizer_hash(rounds: int) -> str:
-    """Hash señuelo para igualar tiempos de respuesta en login fallido."""
-    return bcrypt.hashpw(b"bannedbyabrejeet-timing-equalizer", bcrypt.gensalt(rounds=rounds)).decode(
-        "utf-8"
+    hasher = _build_password_hasher(
+        time_cost=time_cost,
+        memory_cost_kib=memory_cost_kib,
+        parallelism=parallelism,
+        settings=settings,
     )
+    return hasher.hash(password)
+
+
+@lru_cache(maxsize=8)
+def _timing_equalizer_hash(
+    time_cost: int, memory_cost_kib: int, parallelism: int
+) -> str:
+    """Hash señuelo para igualar tiempos de respuesta en login fallido."""
+    hasher = _build_password_hasher(
+        time_cost=time_cost,
+        memory_cost_kib=memory_cost_kib,
+        parallelism=parallelism,
+    )
+    return hasher.hash("bannedbyabrejeet-timing-equalizer")
 
 
 def verify_password(
     password: str, password_hash: str | None, *, settings: Settings | None = None
 ) -> bool:
-    """Verifica una contraseña contra su hash bcrypt.
+    """Verifica una contraseña contra su hash Argon2id.
 
-    Si el hash no existe o está corrupto se ejecuta igualmente un
-    ``checkpw`` contra un hash señuelo: así el tiempo de respuesta no
+    Si el hash no existe o está corrupto se ejecuta igualmente una
+    verificación contra un hash señuelo: así el tiempo de respuesta no
     revela si el usuario existe.
     """
     active_settings = settings if settings is not None else get_settings()
+    hasher = _build_password_hasher(settings=active_settings)
     if not password_hash:
         try:
-            bcrypt.checkpw(
-                password.encode("utf-8"),
-                _timing_equalizer_hash(active_settings.bcrypt_rounds).encode("utf-8"),
+            hasher.verify(
+                _timing_equalizer_hash(
+                    active_settings.argon2_time_cost,
+                    active_settings.argon2_memory_cost_kib,
+                    active_settings.argon2_parallelism,
+                ),
+                password,
             )
-        except ValueError:  # pragma: no cover - defensivo
+        except (VerificationError, ValueError, TypeError):  # pragma: no cover - defensivo
             pass
         return False
 
     try:
-        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
-    except (ValueError, TypeError):
+        return hasher.verify(password_hash, password)
+    except (VerificationError, ValueError, TypeError):
         logger.warning("Hash de contraseña inválido o corrupto en Redis")
         return False
 
