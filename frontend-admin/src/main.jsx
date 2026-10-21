@@ -9,6 +9,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './context/AuthProvider';
 import './styles/global.css';
+import './styles/config.css';
 
 const container = document.getElementById('root');
 if (!container) {

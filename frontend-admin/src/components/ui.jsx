@@ -146,10 +146,10 @@ export function FullScreenLoader({ message = 'Cargando…' }) {
 /* ------------------------------------------------------------------ *
  * Contenedor de las pantallas de autenticacion
  * ------------------------------------------------------------------ */
-export function AuthLayout({ title, subtitle, children, footer }) {
+export function AuthLayout({ title, subtitle, children, footer, wide = false }) {
   return (
     <main className="auth">
-      <section className="auth__card">
+      <section className={`auth__card${wide ? ' auth__card--wide' : ''}`}>
         <header className="auth__header">
           <div className="brand" aria-hidden="true">
             <span className="brand__shield" />
