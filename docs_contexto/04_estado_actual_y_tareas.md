@@ -1,7 +1,8 @@
 # Bannedbyabrejeet: Estado Actual y Tareas Pendientes
 
-> **Última actualización:** 2026-10-16
-> **Rama activa:** `24-cambiar-la-implementación-de-bcrypt-a-argon2id`
+> **Última actualización:** 2026-10-21
+> **Rama activa:** `8-issue-6-api-de-configuración-de-baneos-y-dashboard` (aún sin pushear)
+> **Rama de referencia:** `main` — ya incluye el PR #25 (migración a Argon2id, fix de correo y documentación), merge `dc35f40`
 > **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa sobre Redis dockerizado.
 
 Este documento reemplaza las estimaciones iniciales por el **estado real del repositorio**. Indica qué issues están cerradas, cuáles en curso y qué queda por hacer, con la evidencia correspondiente.
@@ -111,6 +112,7 @@ Endpoints expuestos (bajo `/api/v1`):
 - Persistir `config:settings` (intentos fallidos, tiempo de baneo y ventana de tolerancia) vía Servicio 1.
 - Endpoints `GET`/`PUT` de configuración y vista en el Dashboard.
 - Validación de enteros positivos estrictos.
+- El contrato de claves ya está cerrado en [`docs/REDIS_SCHEMA.md`](../docs/REDIS_SCHEMA.md) §2 (valores por defecto de `maxretry`, `bantime` y `findtime`) y §3 (`config:whitelist` con `127.0.0.1` y `::1` protegidas e inmutables).
 
 ### Issue #7 — IPs baneadas, historial y desbaneo
 
@@ -200,3 +202,29 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
 - Únicamente **Redis está dockerizado**; el backend (uvicorn) y el Frontend A (Vite) corren en la máquina.
 - El puerto **6379 del host debe quedar libre** para el contenedor. Si un Redis del sistema (por ejemplo el de `ntopng`) lo ocupa, el contenedor no podrá publicar el puerto; deténgalo (`sudo systemctl stop redis-server`) o mueva el proyecto a otro puerto.
 - `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP.
+- El `main` **local quedó 9 commits atrás** de `origin/main` (que ya incluye el PR #25). Actualizalo antes de abrir el PR de la Issue #6: `git checkout main && git pull`.
+
+---
+
+## 8. Evaluación de calidad (cátedra)
+
+> Documento **generado automáticamente** por la cátedra de Programación III: [`docs/EVALUACION.md`](../docs/EVALUACION.md). **No editar a mano** (se regenera en cada evaluación). Generado el 2026-10-17 sobre `main`.
+
+**Veredicto:** perfil *exigente* — índice de calidad **7/100** (mínimo exigido: 60), **9/15** criterios cumplidos, **NO aprobado**.
+
+| Criterio | Resultado | Observación |
+|---|---|---|
+| Duplicación | 9.9% | ✅ |
+| SQL / DBG / Any / HTTP / Capas / Vistas | 0 / 0 / 0 / 0 / 3 / 11 | ✅ |
+| Secretos hardcodeados | 1 | 🔴 Señalado en `app/core/constants.py`, que solo contiene cadenas de mensajes: es un **falso positivo** del detector por regex |
+| Tests | 4 archivos (mínimo 5) | 🔴 La Issue #6, con su archivo de pruebas, alcanza el mínimo |
+| Componente grande | 2 (máximo 1) | 🔴 `components/ui.jsx` y `pages/ResetPasswordPage.jsx` |
+| Baja cohesión | 2 | 🔴 `core/config.py` y `schemas/auth.py` |
+| Complejidad | 25 bloques (máximo 5 por cada 1000 LOC) | 🔴 |
+
+**Acciones derivadas para las próximas issues:**
+
+- **No engordar `components/ui.jsx`**: los formularios de la Issue #6 van en componentes nuevos.
+- **Mantener la cobertura de pruebas**: el criterio pide 5 archivos de test y 15 de aceptación; la Issue #6 debe sumar ambos.
+- **Revisar la complejidad y la cohesión** de los archivos nuevos antes de abrir el PR (el detector marca `config.py` y `schemas/auth.py`).
+- **Autoría:** `SantiMulet` concentra el 100% del código; `manu_abrego_1913` aporta 5 commits solo de documentación. La cátedra lo señala como señal de que la integración en equipo no ocurrió.

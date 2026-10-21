@@ -5,9 +5,9 @@
 Detalle completo en [`docs/EVALUACION.md`](docs/EVALUACION.md).
 <!-- calidad:fin -->
 
-# BannedbyAbrejeet — Issue #5: autenticación de administrador
+# BannedbyAbrejeet — Infraestructura Redis y autenticación de administrador
 
-Implementación de Backend A (FastAPI + Redis) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT y recuperación de contraseña. Esta entrega no incluye configuración UFW ni Servicio 2 (Flask).
+Implementación de Backend A (FastAPI + Redis) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT y recuperación de contraseña, sobre Redis dockerizado. Cubre las issues **#4** (infraestructura), **#5** (autenticación) y **#24** (migración de hash a Argon2id). Esta entrega no incluye configuración UFW ni Servicio 2 (Flask).
 
 ## Estado del proyecto
 
@@ -15,16 +15,17 @@ Esta entrega corresponde a la **Issue #5 (autenticación de administrador)** y a
 
 ### Implementado
 
-- **Infraestructura (Issue #4):** Redis 7.2 dockerizado con persistencia AOF + RDB, healthcheck y `scripts/verify_redis.sh`.
+- **Infraestructura (Issue #4):** Redis 7.2 dockerizado con persistencia AOF + RDB, healthcheck y `scripts/verify_redis.sh`. Guía operativa en [`docs/DOCKER_REDIS.md`](docs/DOCKER_REDIS.md).
 - **Autenticación (Issue #5):** setup único atómico, login con JWT, sesión validada contra `session_version` y recuperación de contraseña por correo (token opaco con TTL de 900 s).
 - **Hash de contraseñas (Issue #24):** Argon2id mediante `argon2-cffi`, en sustitución de bcrypt.
 - **Correo:** envío real por SMTP (probado con Gmail) o modo `log` para desarrollo.
 - **Frontend A:** vistas de setup, login, "olvidé mi contraseña", restablecer contraseña y dashboard.
 - **Decisiones y contratos:** [ADR 001](docs/ADR001-UnificacionMultifrontend.md) (estrategia multi-framework) y [contrato de desbaneo](docs/contrato-desbaneo.yaml).
+- **Documentación técnica:** [índice de `docs/`](docs/README.md), [esquema de claves Redis](docs/REDIS_SCHEMA.md) y [estado del proyecto por issue](docs_contexto/04_estado_actual_y_tareas.md).
 
 ### Pendiente
 
-- **Issue #6:** API y vista de parámetros de baneo (intentos fallidos y tiempo de baneo).
+- **Issue #6:** API y vista de parámetros de baneo (intentos fallidos, tiempo de baneo y ventana de tolerancia) y gestión de la lista blanca.
 - **Issue #7:** API y vista de IPs baneadas, historial y desbaneo manual.
 - **Issue #8:** Servicio 2 (Flask) — parser de logs SSH, motor de reglas y bloqueo con UFW — y su visor en el Frontend B (Vue).
 - **Issue #3:** definición de privilegios de Docker y rutas de logs SSH.
@@ -79,8 +80,23 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 │       ├── routes/                # ProtectedRoute, PublicOnlyRoute
 │       ├── styles/global.css
 │       └── utils/                 # validation.js, formatRemaining.js
-├── docs/REDIS_SCHEMA.md        # Esquema completo de claves Redis
-├── docker-compose.yml          # Únicamente Redis
+├── docs/                       # Documentación técnica (índice en docs/README.md)
+│   ├── README.md                  # Índice de la carpeta
+│   ├── REDIS_SCHEMA.md            # Esquema completo de claves Redis
+│   ├── DOCKER_REDIS.md            # Guía operativa de la infraestructura Redis
+│   ├── ADR001-UnificacionMultifrontend.md
+│   ├── contrato-desbaneo.yaml     # Contrato del stream security:events:unban
+│   ├── secuencia-inter_servicios.mmd   # Diagrama del flujo de desbaneo
+│   ├── secuencia-inter_servicios.png
+│   └── EVALUACION.md              # Informe de calidad (generado por la cátedra)
+├── docs_contexto/              # Contexto para agentes: visión, arquitectura, historias y estado
+├── redis/
+│   └── redis.conf                # Configuración production-ready de Redis
+├── scripts/
+│   └── verify_redis.sh           # Verificación automatizada de Redis
+├── docker-compose.yml            # Únicamente Redis
+├── PROYECTO.md                   # Enunciado del proyecto + estado de implementación
+├── contexto_trabajo_final.md     # Contexto del trabajo final (cátedra)
 └── .env.example
 ```
 

@@ -371,7 +371,7 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
 
 ---
 
-## 4. Estado de Implementación (actualizado 2026-10-16)
+## 4. Estado de Implementación (actualizado 2026-10-21)
 
 > Apéndice de seguimiento. No modifica el contrato de alcance definido en las secciones anteriores; solo refleja el avance real del repositorio. Detalle por issue en [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
@@ -384,6 +384,7 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
 - **Autenticación de administrador (Issue #5):** Épica 1 completa — setup único, login, sesión JWT, recuperación de contraseña con TTL y política de contraseñas.
 - **Hash de contraseñas (Issue #24):** Argon2id (`argon2-cffi`) en reemplazo de bcrypt.
 - **Correo:** entrega real por SMTP (probado con Gmail) además del modo `log`.
+- **Evaluación de calidad (cátedra):** informe generado automáticamente en `docs/EVALUACION.md` (2026-10-17) — índice **7/100**, **9/15** criterios cumplidos, **NO aprobado**. Detalle y acciones derivadas en §8 de [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
 ### Pendiente
 

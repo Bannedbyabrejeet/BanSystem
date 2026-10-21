@@ -59,26 +59,33 @@ El sistema requiere un motor de base de datos en memoria que proporcione:
 
 ## 6. Arquitectura
 
+**Solo Redis está dockerizado.** El Servicio 1 (FastAPI) y el Frontend A (React) se ejecutan en la máquina, y alcanzan a Redis por el loopback del host.
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Docker Network: internal_net              │
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │   Nginx      │    │  Service 1   │    │    Redis     │  │
-│  │  (Proxy)     │◄──►│  (FastAPI)   │◄──►│  (Memory DB) │  │
-│  │  :80, :443   │    │              │    │  :6379       │  │
-│  └──────────────┘    └──────────────┘    └──────────────┘  │
-│                                                       ▲     │
-│  ┌────────────────────────────────────────────────┐    │     │
-│  │         Service 2 (Flask - Engine)             │────┘     │
-│  │   network_mode: host (NET_ADMIN)               │          │
-│  └────────────────────────────────────────────────┘          │
-│                                                             │
-│  Volumen persistente: redis_data (/data)                     │
-│    ├── dump.rdb        (RDB snapshots)                       │
-│    └── appendonly.aof  (AOF command log)                     │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│  Host (máquina de desarrollo)                                 │
+│                                                               │
+│  ┌───────────────────────┐      ┌─────────────────────────┐   │
+│  │  Servicio 1           │      │  Frontend A             │   │
+│  │  FastAPI              │◄────►│  React + Vite           │   │
+│  │  127.0.0.1:8000       │ HTTP │  127.0.0.1:3000         │   │
+│  └───────────┬───────────┘      │  (proxy /api → :8000)   │   │
+│              │                  └─────────────────────────┘   │
+│              │ TCP 127.0.0.1:6379                             │
+│              ▼                                                │
+│  ┌───────────────────────────────────────────────────┐       │
+│  │  Contenedor  bannedbyabrejeet_redis              │       │
+│  │  redis:7.2-alpine                                │       │
+│  │  127.0.0.1:6379 → 6379  (solo loopback)          │       │
+│  │  red interna: internal_net (bridge)              │       │
+│  │  volumen: redis_data (/data)                     │       │
+│  │    ├── dump.rdb        (RDB snapshots)            │       │
+│  │    └── appendonly.aof  (AOF command log)          │       │
+│  └───────────────────────────────────────────────────┘       │
+└───────────────────────────────────────────────────────────────┘
 ```
+
+> **Nota:** este diagrama refleja el estado **real**. El diseño original de la issue contemplaba además un proxy Nginx y el Servicio 2 (Flask) dentro de Docker; se descartó al decidir que solo la base de datos va en contenedor, porque Redis necesita un servidor real con persistencia en disco. El Servicio 2 (Issue #8) se conectará igual que el Servicio 1, por loopback.
 
 ---
 
@@ -86,7 +93,7 @@ El sistema requiere un motor de base de datos en memoria que proporcione:
 
 ```
 BanSystem/
-├── docker-compose.yml          # Orquestación de servicios + Redis
+├── docker-compose.yml          # Solo Redis (lo único dockerizado)
 ├── .env.example                # Variables de entorno
 ├── redis/
 │   └── redis.conf              # Configuración production-ready de Redis
@@ -94,7 +101,8 @@ BanSystem/
 │   └── verify_redis.sh         # Verificación automatizada
 └── docs/
     ├── REDIS_SCHEMA.md          # Esquema detallado de datos
-    └── DOCKER_REDIS.md          # Este archivo
+    ├── DOCKER_REDIS.md          # Este archivo
+    └── README.md                # Índice de la documentación
 ```
 
 ---
@@ -277,31 +285,24 @@ Redis se conecta por la red interna `internal_net`; el puerto 8000 del Servicio 
 
 ## 12. Conexión de Servicios
 
-### Servicio 1 (FastAPI) — Red Interna
+Redis se publica **únicamente en el loopback del host** (`127.0.0.1:6379`), de modo que todos los servicios lo alcanzan por TCP directo, sin nombres DNS de Docker.
+
+### Servicio 1 (FastAPI) — loopback del host
 
 ```python
 import redis
 
 r = redis.Redis(
-    host='redis',           # Nombre del servicio en Docker
+    host='127.0.0.1',       # Loopback del host (valor por defecto de REDIS_HOST)
     port=6379,
     password=os.environ['REDIS_PASSWORD'],
     decode_responses=True
 )
 ```
 
-### Servicio 2 (Flask) — Network Mode Host
+### Servicio 2 (Flask) — pendiente (Issue #8)
 
-```python
-import redis
-
-r = redis.Redis(
-    host='127.0.0.1',       # Acceso directo via loopback
-    port=6379,
-    password=os.environ['REDIS_PASSWORD'],
-    decode_responses=True
-)
-```
+Cuando exista, se conectará **igual que el Servicio 1**: loopback a `127.0.0.1:6379` con las mismas credenciales. Queda por decidir si corre en el host (necesita `NET_ADMIN` y acceso a `ufw`) o en un contenedor; esa decisión depende del spike de la Issue #3.
 
 ---
 
@@ -325,11 +326,8 @@ cp .env.example .env
 ### Levantar Redis
 
 ```bash
-# Opción 1: Solo Redis
+# Levantar Redis (única orden necesaria)
 docker compose up -d redis
-
-# Opción 2: Todos los servicios (recomendado)
-docker compose up -d
 ```
 
 ### Verificar Estado
@@ -453,7 +451,6 @@ El archivo `docker-compose.yml` incluye el servicio Redis completamente configur
 - Healthcheck nativo funcional
 - Volumen persistente `redis_data`
 - Configuración montada desde `redis/redis.conf`
-- Dependencia saludable para Service 1
 - Límites de recursos definidos
 
 ### Verificación mediante redis-cli
