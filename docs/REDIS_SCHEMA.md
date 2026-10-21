@@ -173,9 +173,9 @@ Direcciones IP o rangos CIDR. Por defecto incluye `127.0.0.1` y `::1`.
 
 ### Entradas protegidas
 
-Las entradas `127.0.0.1` y `::1` **están siempre presentes** y su eliminación está **bloqueada** (criterio de aceptación US-08): ninguna API puede quitarlas del set, ni siquiera con una operación `SREM` directa. La IP local nunca puede quedar sin protección.
+Las entradas `127.0.0.1` y `::1` **están siempre presentes** y su eliminación está **bloqueada** (criterio de aceptación US-08): las APIs de eliminación responden `409` y el Servicio 1 las reinserta al arrancar y en cada lectura de la lista. La IP local nunca puede quedar sin protección.
 
-El resto de las entradas se agregan y se quitan libremente.
+El resto de las entradas se agregan y se quitan libremente. Las entradas se normalizan con `ipaddress` antes de persistirse (por ejemplo `10.1.2.3/8` se guarda como `10.0.0.0/8`).
 
 ### Ejemplo `redis-cli`
 ```bash

@@ -5,27 +5,27 @@
 Detalle completo en [`docs/EVALUACION.md`](docs/EVALUACION.md).
 <!-- calidad:fin -->
 
-# BannedbyAbrejeet — Infraestructura Redis y autenticación de administrador
+# BannedbyAbrejeet — Configuración de baneos, whitelist y autenticación
 
-Implementación de Backend A (FastAPI + Redis) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT y recuperación de contraseña, sobre Redis dockerizado. Cubre las issues **#4** (infraestructura), **#5** (autenticación) y **#24** (migración de hash a Argon2id). Esta entrega no incluye configuración UFW ni Servicio 2 (Flask).
+Implementación de Backend A (FastAPI + Redis) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT, recuperación de contraseña y configuración de baneos, sobre Redis dockerizado. Cubre las issues **#4** (infraestructura), **#5** (autenticación), **#6** (parámetros de baneo, ventana de tolerancia y whitelist) y **#24** (migración de hash a Argon2id). Esta entrega no incluye configuración UFW ni Servicio 2 (Flask).
 
 ## Estado del proyecto
 
-Esta entrega corresponde a la **Issue #5 (autenticación de administrador)** y a la **Issue #24 (migración de bcrypt a Argon2id)**. Cubre el Servicio 1 (FastAPI) y el Frontend A (React); **no** incluye todavía el Servicio 2 (Flask), el Frontend B (Vue) ni la configuración de UFW.
+Esta entrega corresponde a las **issues #5 (autenticación)**, **#6 (configuración de baneos)** y **#24 (Argon2id)**. Cubre el Servicio 1 (FastAPI) y el Frontend A (React); **no** incluye todavía el Servicio 2 (Flask), el Frontend B (Vue) ni la configuración de UFW.
 
 ### Implementado
 
 - **Infraestructura (Issue #4):** Redis 7.2 dockerizado con persistencia AOF + RDB, healthcheck y `scripts/verify_redis.sh`. Guía operativa en [`docs/DOCKER_REDIS.md`](docs/DOCKER_REDIS.md).
 - **Autenticación (Issue #5):** setup único atómico, login con JWT, sesión validada contra `session_version` y recuperación de contraseña por correo (token opaco con TTL de 900 s).
+- **Configuración (Issue #6 / US-02, US-08, US-09):** endpoints y formulario del dashboard para `maxretry`, `bantime` y `findtime`, más alta/baja de IPs y subredes de la lista blanca. Las IPs locales `127.0.0.1` y `::1` siempre están presentes y no pueden eliminarse (`409`).
 - **Hash de contraseñas (Issue #24):** Argon2id mediante `argon2-cffi`, en sustitución de bcrypt.
 - **Correo:** envío real por SMTP (probado con Gmail) o modo `log` para desarrollo.
-- **Frontend A:** vistas de setup, login, "olvidé mi contraseña", restablecer contraseña y dashboard.
+- **Frontend A:** vistas de setup, login, "olvidé mi contraseña", restablecer contraseña y dashboard con los paneles de configuración y whitelist.
 - **Decisiones y contratos:** [ADR 001](docs/ADR001-UnificacionMultifrontend.md) (estrategia multi-framework) y [contrato de desbaneo](docs/contrato-desbaneo.yaml).
 - **Documentación técnica:** [índice de `docs/`](docs/README.md), [esquema de claves Redis](docs/REDIS_SCHEMA.md) y [estado del proyecto por issue](docs_contexto/04_estado_actual_y_tareas.md).
 
 ### Pendiente
 
-- **Issue #6:** API y vista de parámetros de baneo (intentos fallidos, tiempo de baneo y ventana de tolerancia) y gestión de la lista blanca.
 - **Issue #7:** API y vista de IPs baneadas, historial y desbaneo manual.
 - **Issue #8:** Servicio 2 (Flask) — parser de logs SSH, motor de reglas y bloqueo con UFW — y su visor en el Frontend B (Vue).
 - **Issue #3:** definición de privilegios de Docker y rutas de logs SSH.
@@ -42,6 +42,13 @@ El detalle completo, con evidencia por issue, está en [`docs_contexto/04_estado
 
 Las contraseñas nunca se guardan en claro. Argon2id usa por defecto 3 iteraciones, 64 MiB de memoria y 4 hilos (configurables vía `ARGON2_TIME_COST`, `ARGON2_MEMORY_COST_KIB` y `ARGON2_PARALLELISM`); los parámetros están por encima del mínimo recomendado por OWASP. A diferencia de bcrypt, Argon2id no trunca la contraseña, pero el backend la limita a 1024 bytes como defensa contra agotamiento de recursos durante el hashing.
 
+## Arquitectura de configuración (Issue #6)
+
+- `config:settings` (hash persistente): `maxretry` (intentos antes del baneo), `bantime` (minutos de baneo) y `findtime` (minutos de la ventana de tolerancia). Los tres son enteros positivos estrictos y se escriben juntos con `PUT /api/v1/config/settings`.
+- Valores por defecto si la clave no existe o un campo es inválido: `maxretry=5`, `bantime=30`, `findtime=10`.
+- `config:whitelist` (set persistente): direcciones IPv4/IPv6 y redes CIDR normalizadas con `ipaddress`. `127.0.0.1` y `::1` se reinsertan siempre y su baja responde `409`.
+- Todos los endpoints de configuración exigen el mismo JWT que el resto del panel. El Servicio 2 puede leer las dos claves directamente y aplicar los cambios en su siguiente evaluación.
+
 El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/REDIS_SCHEMA.md).
 
 ## Estructura del proyecto
@@ -53,32 +60,36 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 │   │   ├── api/
 │   │   │   ├── deps.py            # Inyección de dependencias (settings, servicio, admin actual)
 │   │   │   └── v1/
-│   │   │       ├── router.py       # Incluye el router de auth bajo /api/v1
-│   │   │       └── endpoints/auth.py
+│   │   │       ├── router.py       # Routers de auth y config bajo /api/v1
+│   │   │       └── endpoints/      # auth.py, config.py
 │   │   ├── core/
 │   │   │   ├── config.py          # Settings (pydantic-settings)
 │   │   │   ├── constants.py       # Mensajes contractuales
 │   │   │   ├── keys.py            # Nombres de claves Redis
 │   │   │   ├── logging.py
+│   │   │   ├── network.py         # Normalización de IPs/CIDR y entradas protegidas
 │   │   │   └── security.py        # Argon2id, JWT, tokens opacos, política de contraseñas
 │   │   ├── db/redis.py            # Cliente Redis con espera de arranque y ping
-│   │   ├── schemas/auth.py        # Modelos Pydantic de entrada/salida
+│   │   ├── schemas/               # auth.py, config.py
 │   │   ├── services/
 │   │   │   ├── auth_service.py    # Lógica central (Lua atómico para setup y reset)
+│   │   │   ├── config_service.py  # Parámetros de baneo y whitelist
 │   │   │   └── mail_service.py    # Envío SMTP o log en modo desarrollo
 │   │   └── main.py                # App, lifespan, CORS, handlers de error
-│   ├── tests/                     # Pytest (48 tests)
+│   ├── tests/                     # Pytest (85 tests con Redis)
 │   ├── requirements.txt
 │   └── requirements-dev.txt
 ├── frontend-admin/            # Frontend A — React 18 + Vite
 │   └── src/
 │       ├── api/client.js          # Axios + ApiError + almacenamiento del token
-│       ├── components/ui.jsx      # Componentes compartidos
+│       ├── components/
+│       │   ├── ui.jsx             # Componentes compartidos
+│       │   └── config/            # BanSettingsForm.jsx + WhitelistPanel.jsx
 │       ├── constants/messages.js  # Mensajes idénticos a app/core/constants.py
 │       ├── context/               # AuthContext.js + AuthProvider.jsx
 │       ├── pages/                 # Setup, Login, ForgotPassword, ResetPassword, Dashboard
 │       ├── routes/                # ProtectedRoute, PublicOnlyRoute
-│       ├── styles/global.css
+│       ├── styles/                # global.css + config.css
 │       └── utils/                 # validation.js, formatRemaining.js
 ├── docs/                       # Documentación técnica (índice en docs/README.md)
 │   ├── README.md                  # Índice de la carpeta
@@ -241,8 +252,13 @@ El servidor que aloje `build/` debe usar fallback de History API hacia `index.ht
 | `GET` | `/api/v1/auth/verify-reset-token/{token}` | Indica si Redis todavía conserva el token |
 | `POST` | `/api/v1/auth/reset-password` | Consume el token, cambia hash e invalida sesiones previas |
 | `GET` | `/api/v1/auth/me` | Valida el JWT y su versión contra Redis |
+| `GET` | `/api/v1/config/settings` | Parámetros vigentes de baneo (con defaults si Redis está vacío) |
+| `PUT` | `/api/v1/config/settings` | Guarda `maxretry`, `bantime` y `findtime` en Redis |
+| `GET` | `/api/v1/config/whitelist` | Lista blanca y entradas locales protegidas |
+| `POST` | `/api/v1/config/whitelist` | Agrega una IP o subred (normaliza CIDR) |
+| `DELETE` | `/api/v1/config/whitelist?entry=...` | Elimina una entrada; `409` si es `127.0.0.1` o `::1` |
 
-Cuando Redis no responde, los endpoints de autenticación devuelven `503` con el detalle `Servicio de autenticación no disponible`, en lugar de un `500`.
+Los endpoints de configuración requieren el JWT del administrador. Cuando Redis no responde, devuelven `503` con el detalle `Servicio de autenticación no disponible`, en lugar de un `500`.
 
 ## Tests del backend
 
@@ -263,7 +279,7 @@ python -m pip install --target .pylibs -r requirements.txt -r requirements-dev.t
 TEST_REDIS_URL="redis://127.0.0.1:6399/15" PYTHONPATH=.pylibs python -m pytest -q
 ```
 
-Sin `TEST_REDIS_URL` se ejecutan 18 tests y se omiten 30, con un mensaje explicativo en la salida.
+Con el Redis de pruebas se ejecutan **85 tests**. Sin `TEST_REDIS_URL` se ejecutan 18 y se omiten 67, con un mensaje explicativo en la salida.
 
 ## Verificación manual del flujo
 
@@ -276,6 +292,11 @@ Sin `TEST_REDIS_URL` se ejecutan 18 tests y se omiten 30, con un mensaje explica
 7. Verifique que el enlace muestra el formulario, establece una contraseña nueva, consume el token y vuelve a login con `Contraseña actualizada correctamente`.
 8. Reutilice el mismo enlace: debe mostrarse `El enlace de recuperación ha caducado o no es válido`.
 9. Pida un segundo enlace sin usar el primero: el anterior deja de funcionar de inmediato, porque solo puede haber un enlace vigente por administrador.
+10. En el dashboard, cambie los intentos, el tiempo de baneo y la ventana de tolerancia, y presione **Guardar configuración**. Debe mostrarse `Parámetros de baneo actualizados con éxito`
+11. Verifique la persistencia con `HGETALL config:settings` (los tres valores deben coincidir con el formulario).
+12. Agregue `192.168.1.10` y `10.1.2.3/8` a la lista blanca. La segunda entrada debe normalizarse a `10.0.0.0/8`.
+13. Intente eliminar `127.0.0.1`: el botón está deshabilitado y la API responde `409` si se fuerza la petición. La IP sigue en `config:whitelist`.
+14. Recargue el dashboard: los valores y la lista blanca se leen de Redis y se muestran de nuevo.
 
 ## Comprobar `SETEX` y expiración real con `redis-cli`
 

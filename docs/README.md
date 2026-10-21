@@ -16,6 +16,7 @@
 | [`contrato-desbaneo.yaml`](contrato-desbaneo.yaml) | Contrato del broker de desbaneo manual: stream `security:events:unban` y grupo de consumidores `ufw_workers` | 2026-09-04 |
 | [`sequencia-inter_servicios.mmd`](sequencia-inter_servicios.mmd) · [`.png`](sequencia-inter_servicios.png) | Diagrama de secuencia del flujo de desbaneo manual (Admin → Frontend → Servicio 1 → Redis → Servicio 2 → UFW) | 2026-09-04 |
 | [`EVALUACION.md`](EVALUACION.md) | Informe de calidad y autoría generado por la cátedra. **No editar a mano**: se regenera en cada evaluación | 2026-10-17 |
+| [`evidencias/issue-06.md`](evidencias/issue-06.md) | Capturas del dashboard, persistencia en Redis y resultados de las pruebas de la Issue #6 | 2026-10-21 |
 | [`historico/`](historico/) | Borradores descartados, conservados solo como registro del diseño original | — |
 
 ---
