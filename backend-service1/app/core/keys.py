@@ -9,6 +9,8 @@ Clave                                   Tipo        TTL                  Uso
 ``admin:initialized``                   String       sin TTL             setup único
 ``reset_token:<token>``                 String JSON ``SETEX`` 900 s     recuperación
 ``admin:reset_tokens``                  Set          sin TTL             revocación
+``config:settings``                     Hash         sin TTL             umbrales
+``config:whitelist``                    Set          sin TTL             lista blanca
 ======================================  ==========  ===================  ======
 """
 
@@ -25,6 +27,11 @@ ADMIN_RESET_TOKENS: Final[str] = "admin:reset_tokens"
 
 #: Prefijo de los tokens de recuperación (clave creada con SETEX).
 RESET_TOKEN_PREFIX: Final[str] = "reset_token:"
+
+#: Parámetros de baneo (hash con ``maxretry``, ``bantime`` y ``findtime``).
+CONFIG_SETTINGS: Final[str] = "config:settings"
+#: Lista blanca de IPs y subredes (set). Persistente.
+CONFIG_WHITELIST: Final[str] = "config:whitelist"
 
 #: Rol incluido en el JWT del administrador.
 ADMIN_ROLE: Final[str] = "admin"
