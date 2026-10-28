@@ -33,6 +33,19 @@ export const MESSAGES = {
   SESSION_REVOKED: 'La sesión ya no es válida. Volvé a iniciar sesión.',
   LOGOUT_SUCCESS: 'Sesión cerrada correctamente.',
 
+  // --- Configuración de baneos (US-02 / US-09) ---
+  BAN_SETTINGS_UPDATED: 'Parámetros de baneo actualizados con éxito',
+  CONFIG_LOAD_ERROR: 'No se pudo cargar la configuración. Intentá nuevamente.',
+  INTEGER_REQUIRED: 'Ingresá un número entero mayor a cero.',
+
+  // --- Lista blanca (US-08) ---
+  WHITELIST_ADDED: 'Dirección agregada a la lista blanca',
+  WHITELIST_REMOVED: 'Dirección eliminada de la lista blanca',
+  WHITELIST_PROTECTED: 'La IP local no puede eliminarse de la lista blanca',
+  WHITELIST_INVALID:
+    'Ingresá una dirección IP o subred válida (por ejemplo 192.168.1.10 o 10.0.0.0/8)',
+  WHITELIST_EMPTY: 'No hay direcciones adicionales en la lista blanca.',
+
   // --- Errores de red / validacion ---
   NETWORK_ERROR: 'No pudimos conectar con el Servicio 1. Verificá que esté ejecutándose.',
   GENERIC_ERROR: 'Ocurrió un error inesperado. Intentá nuevamente.',

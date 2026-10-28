@@ -190,3 +190,44 @@ export function resetPassword({ token, newPassword, confirmPassword }) {
 export function fetchCurrentSession() {
   return request({ method: 'GET', url: '/auth/me' });
 }
+
+/* ------------------------------------------------------------------ *
+ * Configuracion de baneos y lista blanca (Issue #6)
+ * ------------------------------------------------------------------ */
+
+/** `GET /config/settings` -> `{ maxretry, bantime, findtime }` */
+export function fetchBanSettings() {
+  return request({ method: 'GET', url: '/config/settings' });
+}
+
+/** `PUT /config/settings` — persiste los tres parametros en Redis. */
+export function updateBanSettings({ maxretry, bantime, findtime }) {
+  return request({
+    method: 'PUT',
+    url: '/config/settings',
+    data: { maxretry, bantime, findtime },
+  });
+}
+
+/** `GET /config/whitelist` -> `{ entries, protected_entries }` */
+export function fetchWhitelist() {
+  return request({ method: 'GET', url: '/config/whitelist' });
+}
+
+/** `POST /config/whitelist` — agrega una IP o subred. */
+export function addWhitelistEntry(entry) {
+  return request({
+    method: 'POST',
+    url: '/config/whitelist',
+    data: { entry: entry.trim() },
+  });
+}
+
+/** `DELETE /config/whitelist?entry=...` — elimina una IP o subred. */
+export function removeWhitelistEntry(entry) {
+  return request({
+    method: 'DELETE',
+    url: '/config/whitelist',
+    params: { entry },
+  });
+}

@@ -30,6 +30,7 @@ from app.db.redis import (
     wait_for_redis,
 )
 from app.services.auth_service import CredentialsNotFoundError
+from app.services.config_service import ConfigService
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +40,22 @@ sistema de baneo de SSH por web.
 
 * **Autenticación:** creación de la cuenta única de administrador, inicio de
   sesión con JWT y restauración de contraseña con tokens volátiles en Redis.
+* **Configuración:** parámetros de baneo (`maxretry`, `bantime`, `findtime`) y
+  lista blanca de IPs/subredes.
+* **Issue #7:** Gestión de IPs baneadas, historial y desbaneo manual.
 * **Persistencia:** todas las claves viven en Redis
-  (`admin:credentials`, `admin:initialized`, `reset_token:<token>`).
+  (`admin:credentials`, `admin:initialized`, `reset_token:<token>`,
+  `config:settings`, `config:whitelist`, `ips:banned`, `ips:history`).
 
-Los endpoints de configuración de baneo, IPs baneadas e historial se
-agregan en las issues posteriores del proyecto.
+Los endpoints de IPs baneadas e historial se agregan en la Issue #7.
 """
 
 TAGS_METADATA = [
     {"name": "Autenticación", "description": "Setup único, login JWT y recuperación de contraseña."},
+    {
+        "name": "Configuración",
+        "description": "Parámetros de baneo, ventana de tolerancia y lista blanca (US-02, US-08, US-09).",
+    },
     {"name": "Sistema", "description": "Healthcheck y diagnóstico del servicio."},
 ]
 
@@ -63,7 +71,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.redis = client
     try:
         await wait_for_redis(client, settings)
-    except RedisUnavailableError:
+        # US-08: las IPs locales protegidas existen desde el arranque, sin
+        # esperar a que el administrador abra el dashboard.
+        await ConfigService(client).ensure_defaults()
+    except (RedisUnavailableError, RedisError):
         await close_redis(client)
         app.state.redis = None
         raise

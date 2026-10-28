@@ -1,22 +1,24 @@
 /**
- * Destino tras un login exitoso (US-01: "da acceso al Dashboard principal").
+ * Dashboard del administrador (US-01) con la configuración de la Issue #6.
  *
- * Alcance de la Issue #5: muestra la sesión activa y permite cerrarla.
- * Los paneles de parámetros de baneo, IPs baneadas e historial (issues #6,
- * #7 y #8) se incorporan en este mismo layout más adelante.
+ * Incluye:
+ * - Sesión activa y cierre de sesión.
+ * - US-02 / US-09: umbral de intentos, tiempo de baneo y ventana de tolerancia.
+ * - US-08: alta y baja de IPs/subredes de la lista blanca.
+ *
+ * Las secciones de IPs baneadas y logs SSH (issues #7 y #8) siguen pendientes.
  */
 
 import { Link, useNavigate } from 'react-router-dom';
 
-import { AuthLayout, Button } from '../components/ui';
+import BanSettingsForm from '../components/config/BanSettingsForm';
+import WhitelistPanel from '../components/config/WhitelistPanel';
+import { Alert, AuthLayout, Button } from '../components/ui';
+import { MESSAGES } from '../constants/messages';
 import { useAuth } from '../context/AuthContext';
+import useBanConfig from '../hooks/useBanConfig';
 
 const PENDIENTES = [
-  {
-    issue: '#6',
-    titulo: 'Parámetros de baneo',
-    detalle: 'Intentos fallidos previos al baneo y tiempo de baneo en minutos.',
-  },
   {
     issue: '#7',
     titulo: 'IPs baneadas e historial',
@@ -32,14 +34,26 @@ const PENDIENTES = [
 export default function DashboardPage() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
+  const {
+    settings,
+    whitelist,
+    loading,
+    loadError,
+    success,
+    retry,
+    saveSettings,
+    addEntry,
+    removeEntry,
+  } = useBanConfig();
 
   function handleLogout() {
     logout();
-    navigate('/login', { replace: true, state: { message: 'Sesión cerrada correctamente.' } });
+    navigate('/login', { replace: true, state: { message: MESSAGES.LOGOUT_SUCCESS } });
   }
 
   return (
     <AuthLayout
+      wide
       title="Panel de administración"
       subtitle={`Sesión activa como ${admin?.username ?? 'administrador'}`}
       footer={
@@ -50,7 +64,7 @@ export default function DashboardPage() {
       }
     >
       <section className="dashboard">
-        <div className="dashboard__session">
+        <div className="dashboard__panel dashboard__session">
           <h2 className="dashboard__subtitle">Sesión actual</h2>
           <dl className="dashboard__data">
             <div>
@@ -71,7 +85,65 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        <div className="dashboard__pending">
+        <Alert message={success} type="success" />
+
+        {loadError && (
+          <div className="dashboard__panel">
+            <Alert message={loadError} type="error" />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={retry}
+            >
+              Reintentar
+            </Button>
+          </div>
+        )}
+
+        {loading && !loadError && (
+          <p className="dashboard__loading" role="status">
+            Cargando configuración…
+          </p>
+        )}
+
+        {!loading && !loadError && settings && (
+          <div className="dashboard__panel">
+            <header className="dashboard__section-header">
+              <div>
+                <h2 className="dashboard__subtitle">Parámetros de baneo</h2>
+                <p className="dashboard__description">
+                  Ajustá la rigurosidad de la protección SSH. Los tres valores se
+                  guardan juntos en Redis.
+                </p>
+              </div>
+              <span className="dashboard__tag">US-02 · US-09</span>
+            </header>
+            <BanSettingsForm settings={settings} onSave={saveSettings} />
+          </div>
+        )}
+
+        {!loading && !loadError && (
+          <div className="dashboard__panel">
+            <header className="dashboard__section-header">
+              <div>
+                <h2 className="dashboard__subtitle">Lista blanca</h2>
+                <p className="dashboard__description">
+                  Las direcciones y subredes listadas quedan exentas de bloqueos.
+                  Las IPs locales siempre están protegidas.
+                </p>
+              </div>
+              <span className="dashboard__tag">US-08</span>
+            </header>
+            <WhitelistPanel
+              entries={whitelist.entries}
+              protectedEntries={whitelist.protected_entries}
+              onAdd={addEntry}
+              onRemove={removeEntry}
+            />
+          </div>
+        )}
+
+        <div className="dashboard__panel dashboard__pending">
           <h2 className="dashboard__subtitle">Próximas secciones</h2>
           <ul className="dashboard__list">
             {PENDIENTES.map((item) => (

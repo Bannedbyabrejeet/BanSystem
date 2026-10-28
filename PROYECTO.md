@@ -371,7 +371,7 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
 
 ---
 
-## 4. Estado de Implementación (actualizado 2026-10-16)
+## 4. Estado de Implementación (actualizado 2026-10-21)
 
 > Apéndice de seguimiento. No modifica el contrato de alcance definido en las secciones anteriores; solo refleja el avance real del repositorio. Detalle por issue en [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
@@ -382,12 +382,14 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
 - **Contrato de desbaneo (Issue #2 / Sync Point 2):** `docs/contrato-desbaneo.yaml` (stream `security:events:unban`).
 - **Estrategia multi-framework de frontends (Issue #1 / Sync Point 3):** `docs/ADR001-UnificacionMultifrontend.md`.
 - **Autenticación de administrador (Issue #5):** Épica 1 completa — setup único, login, sesión JWT, recuperación de contraseña con TTL y política de contraseñas.
+- **Configuración de seguridad (Issue #6):** Épica 2 completa en el Servicio 1 y el Frontend A — parámetros `maxretry`, `bantime`, `findtime` (US-02/US-09) y lista blanca con `127.0.0.1` y `::1` protegidas (US-08).
 - **Hash de contraseñas (Issue #24):** Argon2id (`argon2-cffi`) en reemplazo de bcrypt.
 - **Correo:** entrega real por SMTP (probado con Gmail) además del modo `log`.
+- **Evaluación de calidad (cátedra):** informe generado automáticamente en `docs/EVALUACION.md` (2026-10-17) — índice **7/100**, **9/15** criterios cumplidos, **NO aprobado**. Detalle y acciones derivadas en §8 de [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
 ### Pendiente
 
-- **Épica 2 (configuración):** endpoints y vista de parámetros de baneo (Issue #6); ventana temporal o *findtime* (US-09); lista blanca (US-08).
+- **Consumo de la configuración en el Servicio 2:** el motor de evaluación debe leer `config:settings` y `config:whitelist` (Issue #8).
 - **Épica 3 (logs SSH):** parser y visor (Issue #8).
 - **Épica 4 (baneo automático):** motor de reglas y bloqueo con UFW (Issue #8), dependiente del spike #3.
 - **Épica 5 (gestión de IPs):** historial, estado y desbaneo manual (Issue #7).
@@ -397,6 +399,6 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
 
 | Área | Tareas cerradas | Tareas pendientes |
 |---|---|---|
-| Desarrollador 1 | INFRA-01, BACK1-01, FRONT-01 | BACK1-02, BACK1-03, FRONT-02, FRONT-03 |
+| Desarrollador 1 | INFRA-01, BACK1-01, BACK1-02, FRONT-01, FRONT-02 | BACK1-03, FRONT-03 |
 | Desarrollador 2 | — | BACK2-01, BACK2-02, BACK2-03, BACK2-04, FRONT-04, FRONT-05 |
 

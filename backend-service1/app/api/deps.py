@@ -19,6 +19,7 @@ from app.core.security import (
 from app.db.redis import get_redis
 from app.schemas.auth import AdminRecord
 from app.services.auth_service import AuthService
+from app.services.config_service import ConfigService
 from app.services.mail_service import MailService
 
 #: Esquema Bearer: FastAPI lo publica en Swagger UI (botón "Authorize").
@@ -53,8 +54,14 @@ def get_mail_service(settings: SettingsDep) -> MailService:
     return MailService(settings)
 
 
+def get_config_service(redis: RedisDep) -> ConfigService:
+    """Construye el servicio de configuración sobre el cliente Redis."""
+    return ConfigService(redis)
+
+
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 MailServiceDep = Annotated[MailService, Depends(get_mail_service)]
+ConfigServiceDep = Annotated[ConfigService, Depends(get_config_service)]
 
 
 def get_client_ip(request: Request) -> str:

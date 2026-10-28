@@ -1,3 +1,20 @@
+# ============================================================================
+#  BORRADOR HISTÓRICO — NO ES EL COMPOSE REAL DEL PROYECTO
+# ============================================================================
+#
+#  Este archivo es el borrador original de la Issue #4, cuando se preveía
+#  dockerizar TODA la arquitectura: proxy Nginx, Servicio 1 (FastAPI) y
+#  Servicio 2 (Flask), este último con NET_ADMIN para operar UFW.
+#
+#  Ese diseño se descartó. La decisión vigente es dockerizar ÚNICAMENTE
+#  Redis (ver ../../docker-compose.yml), porque Redis necesita un servidor
+#  real con persistencia en disco (AOF + RDB); el resto de los servicios
+#  corre en la máquina y alcanza a Redis por loopback en 127.0.0.1:6379.
+#
+#  Se conserva solo como registro histórico del diseño descartado.
+#  Arquitectura real: ../DOCKER_REDIS.md §6.
+# ============================================================================
+
 version: '3.8'
 
 services:

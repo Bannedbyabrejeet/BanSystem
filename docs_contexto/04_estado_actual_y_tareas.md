@@ -1,8 +1,9 @@
 # Bannedbyabrejeet: Estado Actual y Tareas Pendientes
 
-> **Última actualización:** 2026-10-16
-> **Rama activa:** `24-cambiar-la-implementación-de-bcrypt-a-argon2id`
-> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa sobre Redis dockerizado.
+> **Última actualización:** 2026-10-28
+> **Rama activa:** `8-issue-6-api-de-configuración-de-baneos-y-dashboard`
+> **Rama de referencia:** `main` — ya incluye el PR #25 (migración a Argon2id, fix de correo y documentación), merge `dc35f40`
+> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa y configuración de baneos/whitelist sobre Redis dockerizado. **Issue #7: Endpoints API para IPs baneadas, historial y desbaneo manual implementados.**
 
 Este documento reemplaza las estimaciones iniciales por el **estado real del repositorio**. Indica qué issues están cerradas, cuáles en curso y qué queda por hacer, con la evidencia correspondiente.
 
@@ -17,8 +18,8 @@ Este documento reemplaza las estimaciones iniciales por el **estado real del rep
 | **#3** | Privilegios de Docker y ruta de logs SSH (spike) | ⏳ Pendiente | — |
 | **#4** | Setup de infraestructura y base de datos (Redis) | ✅ Completada | `docker-compose.yml`, `redis/redis.conf`, `scripts/verify_redis.sh`, `docs/DOCKER_REDIS.md` |
 | **#5** | Autenticación de administrador | ✅ Completada | `backend-service1/`, `frontend-admin/`, `README.md` |
-| **#6** | Parámetros de baneo (API + vista) | ⏳ Pendiente | — |
-| **#7** | IPs baneadas, historial y desbaneo manual | ⏳ Pendiente | — |
+| **#6** | Parámetros de baneo, findtime y whitelist (API + vista) | ✅ Completada | `app/api/v1/endpoints/config.py`, `app/services/config_service.py`, `tests/test_config_api.py`, `frontend-admin/src/components/config/` |
+| **#7** | IPs baneadas, historial y desbaneo manual | 🚧 En progreso | Endpoints API implementados: `GET /banned-ips/`, `POST /banned-ips/`, `DELETE /banned-ips/{ip}`, `GET /banned-ips/history/` |
 | **#8** | Servicio 2 (parser SSH + UFW) y visor de logs | ⏳ Pendiente | — |
 | **#24** | Migración de bcrypt a Argon2id | ✅ Completada | `backend-service1/app/core/security.py` |
 
@@ -88,12 +89,31 @@ Endpoints expuestos (bajo `/api/v1`):
 - Vistas: `/setup`, `/login`, `/forgot-password`, `/reset-password` y `/dashboard`.
 - JWT en `sessionStorage` (se pierde al cerrar la pestaña); guardas `ProtectedRoute` / `PublicOnlyRoute`.
 - Cliente Axios con `ApiError` y mensajes idénticos a los del backend (`app/core/constants.py` ↔ `src/constants/messages.js`).
-- El Dashboard muestra la sesión activa; las secciones de parámetros, IPs y logs quedan como marcadores de las issues #6, #7 y #8.
+- El Dashboard muestra la sesión activa, el formulario de parámetros de baneo y la lista blanca. Las secciones de IPs baneadas y logs siguen como marcadores de las issues #7 y #8.
 
-### 2.6 Pruebas
+### 2.6 Configuración de baneos y whitelist — Issue #6
 
-- **48 tests** en `backend-service1/tests/` (seguridad + API de autenticación).
-- Si no se define `TEST_REDIS_URL`, se ejecutan 18 y se omiten 30 (las que necesitan Redis).
+Claves Redis (detalle en `docs/REDIS_SCHEMA.md` §2 y §3):
+
+- `config:settings` (hash persistente): `maxretry`, `bantime` y `findtime`. Si falta la clave o un campo es inválido se usan `5`, `30` y `10`.
+- `config:whitelist` (set persistente): IPs IPv4/IPv6 y redes CIDR normalizadas. `127.0.0.1` y `::1` se reinsertan en cada lectura y no pueden eliminarse (`409`).
+
+Endpoints bajo `/api/v1/config` (todos con JWT):
+
+| Método | Ruta | Resultado |
+|---|---|---|
+| `GET` | `/settings` | Valores vigentes; defaults si la clave no existe |
+| `PUT` | `/settings` | Persiste los tres enteros positivos estrictos juntos |
+| `GET` | `/whitelist` | Entradas ordenadas y `protected_entries` |
+| `POST` | `/whitelist` | Agrega IP/subred; normaliza `10.1.2.3/8` a `10.0.0.0/8` |
+| `DELETE` | `/whitelist?entry=...` | Baja de una entrada; `409` para IPs locales |
+
+En el Frontend A, los componentes `BanSettingsForm` y `WhitelistPanel` viven en `src/components/config/` (fuera de `ui.jsx`) y el dashboard los integra en un layout ancho. La validación de enteros, IPv4, IPv6 y CIDR se replica en `src/utils/validation.js`.
+
+### 2.7 Pruebas
+
+- **85 tests** en `backend-service1/tests/` (seguridad, autenticación y configuración).
+- Si no se define `TEST_REDIS_URL`, se ejecutan 18 y se omiten 67 (las que necesitan Redis).
 - Requieren un **Redis aparte del de desarrollo** (por ejemplo `redis://127.0.0.1:6399/15`), porque hacen `FLUSHDB`.
 
 ---
@@ -105,12 +125,6 @@ Endpoints expuestos (bajo `/api/v1`):
 - Definir si el Servicio 2 corre en el host o en un contenedor.
 - Si es contenedor: manejo de `CAP_NET_ADMIN`, `network_mode: host` y acceso al socket/`ufw`.
 - Ruta exacta de logs SSH (`/var/log/auth.log`, `/var/log/secure` o `journalctl`).
-
-### Issue #6 — Parámetros de baneo
-
-- Persistir `config:settings` (intentos fallidos, tiempo de baneo y ventana de tolerancia) vía Servicio 1.
-- Endpoints `GET`/`PUT` de configuración y vista en el Dashboard.
-- Validación de enteros positivos estrictos.
 
 ### Issue #7 — IPs baneadas, historial y desbaneo
 
@@ -128,8 +142,7 @@ Endpoints expuestos (bajo `/api/v1`):
 
 ### Otros pendientes menores
 
-- **Lista blanca (US-08):** `config:whitelist`, con `127.0.0.1` protegida e inmutable.
-- **Ventana temporal (US-09):** parámetro `findtime` en la evaluación del Servicio 2.
+- **Consumo en el Servicio 2 (US-08 / US-09):** el parámetro `findtime` y la whitelist ya se persisten en Redis; resta que el motor de evaluación los consulte al procesar cada log.
 - **Frontend B (Vue):** aún no iniciado.
 
 > Nota: el TTL estricto de tokens (US-10) **ya está implementado** con `SETEX` en la Issue #5.
@@ -144,10 +157,10 @@ Endpoints expuestos (bajo `/api/v1`):
 |----|-------|--------|--------------|
 | **INFRA-01** | Setup de Redis en Docker | ✅ Completada | Issue #4 |
 | **BACK1-01** | Autenticación de Administrador | ✅ Completada | Issue #4 |
-| **BACK1-02** | API de Configuración de Baneos | ⏳ Pendiente | Issue #5 |
+| **BACK1-02** | API de Configuración de Baneos | ✅ Completada | Issue #5 |
 | **BACK1-03** | API de Historial y Monitoreo de IPs | ⏳ Pendiente | Issue #5 |
 | **FRONT-01** | Pantalla de Login (y setup/recuperación) | ✅ Completada | BACK1-01 |
-| **FRONT-02** | Formulario de Parámetros de Baneo | ⏳ Pendiente | BACK1-02 |
+| **FRONT-02** | Formulario de Parámetros de Baneo | ✅ Completada | BACK1-02 |
 | **FRONT-03** | Vista de Historial y Estado de IPs | ⏳ Pendiente | BACK1-03 |
 
 ### Desarrollador 2: Motor de Seguridad, Parser SSH e Integración UFW
@@ -183,7 +196,13 @@ curl -s http://localhost:8000/api/v1/auth/status   # -> {"initialized":true}
 
 # 3. Tests del backend (Redis aparte requerido)
 cd backend-service1
-TEST_REDIS_URL="redis://127.0.0.1:6399/15" PYTHONPATH=.pylibs python -m pytest -q    # -> 48 passed
+TEST_REDIS_URL="redis://127.0.0.1:6399/15" PYTHONPATH=.pylibs python -m pytest -q    # -> 85 passed
+
+# 4. Configuración persistida (tras guardar en el dashboard)
+docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning \
+  HGETALL config:settings
+docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning \
+  SMEMBERS config:whitelist
 ```
 
 El hash almacenado debe comenzar por `$argon2id$`:
@@ -200,3 +219,29 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
 - Únicamente **Redis está dockerizado**; el backend (uvicorn) y el Frontend A (Vite) corren en la máquina.
 - El puerto **6379 del host debe quedar libre** para el contenedor. Si un Redis del sistema (por ejemplo el de `ntopng`) lo ocupa, el contenedor no podrá publicar el puerto; deténgalo (`sudo systemctl stop redis-server`) o mueva el proyecto a otro puerto.
 - `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP.
+- La rama de la Issue #6 parte de `main` actualizado e incluye el PR #25. Antes de abrir el PR, verificar que la rama esté sincronizada con `origin/main`.
+
+---
+
+## 8. Evaluación de calidad (cátedra)
+
+> Documento **generado automáticamente** por la cátedra de Programación III: [`docs/EVALUACION.md`](../docs/EVALUACION.md). **No editar a mano** (se regenera en cada evaluación). Generado el 2026-10-17 sobre `main`.
+
+**Veredicto:** perfil *exigente* — índice de calidad **7/100** (mínimo exigido: 60), **9/15** criterios cumplidos, **NO aprobado**.
+
+| Criterio | Resultado | Observación |
+|---|---|---|
+| Duplicación | 9.9% | ✅ |
+| SQL / DBG / Any / HTTP / Capas / Vistas | 0 / 0 / 0 / 0 / 3 / 11 | ✅ |
+| Secretos hardcodeados | 1 | 🔴 Señalado en `app/core/constants.py`, que solo contiene cadenas de mensajes: es un **falso positivo** del detector por regex |
+| Tests | 4 archivos (mínimo 5) | 🟡 Tras la Issue #6 se sumó `tests/test_config_api.py`; el informe se regenera sobre `main` |
+| Componente grande | 2 (máximo 1) | 🔴 `components/ui.jsx` y `pages/ResetPasswordPage.jsx` |
+| Baja cohesión | 2 | 🔴 `core/config.py` y `schemas/auth.py` |
+| Complejidad | 25 bloques (máximo 5 por cada 1000 LOC) | 🔴 |
+
+**Acciones derivadas para las próximas issues:**
+
+- **No engordar `components/ui.jsx`**: los formularios de la Issue #6 se implementaron en `components/config/`, fuera del archivo compartido.
+- **Mantener la cobertura de pruebas**: el criterio pide 5 archivos de test y 15 de aceptación; la Issue #6 sumó `test_config_api.py` y 37 casos de configuración.
+- **Revisar la complejidad y la cohesión** de los archivos nuevos antes de abrir el PR (el detector marca `config.py` y `schemas/auth.py`).
+- **Autoría:** `SantiMulet` concentra el 100% del código; `manu_abrego_1913` aporta 5 commits solo de documentación. La cátedra lo señala como señal de que la integración en equipo no ocurrió.

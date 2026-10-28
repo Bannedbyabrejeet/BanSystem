@@ -112,6 +112,21 @@ config:settings
 | `bantime` | Integer | Duración del baneo en minutos |
 | `findtime` | Integer | Ventana temporal (minutos) para acumular intentos |
 
+### Valores por defecto
+
+| Campo | Valor por defecto | Significado |
+|---|---|---|
+| `maxretry` | `5` | Intentos fallidos tolerados antes de banear a la IP |
+| `bantime` | `30` | Minutos de duración del baneo |
+| `findtime` | `10` | Minutos de la ventana deslizante para acumular intentos |
+
+Reglas del contrato entre el Servicio 1 (escritura) y el Servicio 2 (lectura):
+
+- Si la clave `config:settings` **no existe**, se usan estos valores por defecto.
+- Si existe pero le falta algún campo, el campo ausente toma su valor por defecto.
+- Los tres campos son **enteros positivos** y se escriben siempre juntos.
+- El TTL de la clave `failed:<IP>` se calcula a partir de `findtime` (ver §4).
+
 ### Ejemplo `redis-cli`
 ```bash
 # Set
@@ -155,6 +170,12 @@ config:whitelist
 
 ### Valores
 Direcciones IP o rangos CIDR. Por defecto incluye `127.0.0.1` y `::1`.
+
+### Entradas protegidas
+
+Las entradas `127.0.0.1` y `::1` **están siempre presentes** y su eliminación está **bloqueada** (criterio de aceptación US-08): las APIs de eliminación responden `409` y el Servicio 1 las reinserta al arrancar y en cada lectura de la lista. La IP local nunca puede quedar sin protección.
+
+El resto de las entradas se agregan y se quitan libremente. Las entradas se normalizan con `ipaddress` antes de persistirse (por ejemplo `10.1.2.3/8` se guarda como `10.0.0.0/8`).
 
 ### Ejemplo `redis-cli`
 ```bash

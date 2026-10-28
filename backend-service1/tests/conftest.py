@@ -41,7 +41,7 @@ ADMIN_PASSWORD = "Banned2024Admin"
 NEW_PASSWORD = "NuevaClave2024"
 
 #: Prefijo de las claves que el test limpia entre casos.
-MANAGED_KEY_PREFIXES = ("admin:", "reset_token:")
+MANAGED_KEY_PREFIXES = ("admin:", "reset_token:", "config:")
 
 
 #: El reset de contraseña usa ``cjson`` dentro del script Lua, por lo que la
