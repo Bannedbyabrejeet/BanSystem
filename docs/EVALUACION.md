@@ -1,9 +1,9 @@
 <!-- evaluacion:inicio -->
 # Evaluación — Bannedbyabrejeet/BanSystem
 
-> Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad). **No editar a mano**: se regenera en cada evaluación.
+> Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-10-17.
+> Generado: 2026-10-28.
 
 ## 1. Veredicto
 
@@ -13,7 +13,7 @@
 | Índice de calidad de servicios | **7/100** (mínimo 60) |
 | Criterios cumplidos | **9/15** |
 | Aprobado (semáforo) | **NO** |
-| Código (LOC) | 3,706 |
+| Código (LOC) | 3,789 |
 | Archivos de código | 43 |
 | Capas detectadas | vistas, servicios, estado |
 
@@ -23,14 +23,25 @@
 
 | Autor | Commits | Código (LOC) | Tests (LOC) | Docs (LOC) | Días activos | % del código |
 |---|---:|---:|---:|---:|---:|---:|
-| SantiMulet | 9 | 4,106 | 798 | 2,096 | 8 | 100% |
-| manu_abrego_1913 | 5 | 0 | 0 | 254 | 5 | 0% |
+| SantiMulet | 13 | 4,188 | 804 | 2,287 | 10 | 100% |
+| manu_abrego_1913 | 5 | 0 | 0 | 253 | 5 | 0% |
 
 > _El LOC de autoría lo calcula RepoSense sobre el historial y puede diferir del LOC de código del análisis de calidad (que mira solo el estado de `main`)._
 
 > **Reparto del trabajo:** SantiMulet concentra el 100% de las líneas de código. Un reparto muy desigual suele indicar que la integración no fue realmente en equipo; vale la pena reconstruir cómo se coordinó.
 
-## 3. Aspectos evaluados
+## 3. Constancia (IC) — todas las ramas
+
+> El IC mide **cuándo** se trabajó (sesiones por semana, pausas y recencia), no cuánto ni con qué calidad. Se calcula sobre **todas las ramas** de todos los repositorios del alumno, no sólo `main`.
+
+| Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
+|---|--:|--:|--:|--:|--:|--|--|
+| SantiMulet | 8 | 37% | 23 d | 50% | **31** | No aprueba | Cumplimiento 37% (mín. 50%); Pausa 23 d (máx. 10 d) |
+| manu_abrego_1913 | 3 | 14% | 61 d | 50% | **16** | No aprueba | Cumplimiento 14% (mín. 50%); Pausa 61 d (máx. 10 d) |
+
+> Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
+
+## 4. Aspectos evaluados
 
 Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuando el resultado está en rojo, se agregan preguntas para **investigar la causa** (no hay recetas: entender el porqué es parte de la evaluación).
 
@@ -48,7 +59,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Porcentaje de bloques de código repetidos (similitud) en el repositorio.
 - **Por qué importa:** Cada copia se mantiene por separado: un arreglo hay que repetirlo y los defectos se multiplican.
-- **Tu resultado:** **9.9%** de duplicación _(máximo 15%)_
+- **Tu resultado:** **10.2%** de duplicación _(máximo 15%)_
 
 ### 3. Secretos hardcodeados (SEC) — A REVISAR
 
@@ -114,7 +125,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Complejidad ciclomática: cantidad de caminos posibles dentro de una función (condicionales, bucles, casos).
 - **Por qué importa:** Muchos caminos = difícil de seguir y de probar; suelen esconderse casos sin cubrir.
-- **Tu resultado:** **25** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 3706 LOC))_
+- **Tu resultado:** **25** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 3789 LOC))_
 - **Para investigar la causa:**
     - ¿Se agregaron condiciones a medida que aparecían casos nuevos?
     - ¿Se probaron todos los caminos o solo el caso principal?
@@ -124,7 +135,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Tamaño de las funciones/métodos y cantidad de parámetros.
 - **Por qué importa:** Una función que hace varias cosas cuesta leerla, nombrarla y reutilizarla.
-- **Tu resultado:** **24** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
+- **Tu resultado:** **26** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
 
 ### 13. Acoplamiento alto (Acop) — OK
 
@@ -148,7 +159,22 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 - **Por qué importa:** El frontend se mide por pantallas: pocas vistas sugiere poca cobertura de la interfaz pedida.
 - **Tu resultado:** **11** vista(s)/componente(s) _(mínimo 8)_
 
-## 4. Anexo: dónde mirar
+## 5. Qué falta para aprobar
+
+Criterios que hoy están en rojo y qué habría que cambiar para alcanzar el nivel de aprobación (perfil `exigente`):
+
+| Criterio | Resultado actual | Meta | Qué arreglar |
+|---|---|---|---|
+| Índice de calidad de servicios (indice) | índice **7/100** | mínimo 60 | Subir el índice a ≥60 corrigiendo primero las señales de más peso: duplicación, secretos, SQL y capas. |
+| Secretos hardcodeados (SEC) | **1** secreto(s) hardcodeado(s) | máximo 0 | Leer credenciales de variables de entorno o del gestor de secretos y sacarlas del código; 0 casos. |
+| Componente demasiado grande (BigC) | **2** componente(s) demasiado grande(s) | máximo 1 | Dividir el componente por responsabilidad en subcomponentes; ≤1 componente grande. |
+| Baja cohesión (Coh) | **2** unidad(es) con baja cohesión | máximo 0 | Separar en unidades con una sola responsabilidad; 0 clases con baja cohesión. |
+| Complejidad alta (Compl) | **25** bloque(s) de complejidad alta | máximo 5 por 1000 LOC (tenés 3789 LOC) | Extraer ramas y reglas a funciones con nombre propio; ≤5 bloques por 1000 LOC. |
+| Tests automatizados (Tests) | **4** archivo(s) de test | mínimo 5 | Agregar tests de los flujos principales hasta llegar a 5 archivos. |
+
+> Empezá por las señales de seguridad (**SEC**, **SQL**) y por la **duplicación**: son las que más pesan en el índice y las más rápidas de verificar a ojo.
+
+## 6. Anexo: dónde mirar
 
 Archivos donde el análisis encontró cada señal en rojo (sin número de línea, a propósito):
 
