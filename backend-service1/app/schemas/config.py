@@ -1,7 +1,7 @@
-"""Esquemas Pydantic de la configuración de baneos y la lista blanca.
+"""Esquemas Pydantic de la configuración de baneos, la lista blanca y el historial.
 
 Cubre US-02 (umbral e intervalo de baneo), US-09 (ventana de tolerancia) y
-US-08 (whitelist). Los valores numéricos son enteros positivos estrictos.
+US-08 (whitelist), y la Issue #7: IPs baneadas e historial.
 """
 
 from __future__ import annotations
@@ -84,3 +84,69 @@ class WhitelistMutationResponse(WhitelistResponse):
 
     message: str
     entry: str
+
+
+# --- Issue #7: IPs baneadas e historial ---
+
+class BanRecord(BaseModel):
+    """Registro de una IP baneada en ``ips:banned``."""
+
+    model_config = ConfigDict()
+
+    ip: str = Field(
+        description="Dirección IP baneada.",
+        example="203.0.113.42",
+    )
+    banned_at: int = Field(
+        description="Timestamp UNIX de cuándo fue baneada.",
+        example=1725484800,
+    )
+    expires_at: int = Field(
+        description="Timestamp UNIX cuando vence el baneo.",
+        example=1725486600,
+    )
+    duration_min: int = Field(
+        description="Duración en minutos del baneo.",
+        example=30,
+    )
+    reason: str = Field(
+        description="Motivo del baneo.",
+        example="SSH brute force",
+    )
+
+
+class HistoryEntry(BaseModel):
+    """Entrada del historial de baneos en ``ips:history``."""
+
+    model_config = ConfigDict()
+
+    ip: str = Field(
+        description="Dirección IP involucrada.",
+        example="203.0.113.42",
+    )
+    action: str = Field(
+        description="Acción realizada.",
+        example="banned",
+    )
+    banned_at: int = Field(
+        description="Timestamp UNIX de cuándo se realizó la acción.",
+        example=1725484800,
+    )
+    unbanned_at: int | None = Field(
+        description="Timestamp UNIX cuando se desbaneó, o ``None`` si aún está baneada.",
+        default=None,
+        example=1725486600,
+    )
+    duration_min: int = Field(
+        description="Duración en minutos asignada.",
+        example=30,
+    )
+    reason: str = Field(
+        description="Motivo de la acción.",
+        example="SSH brute force",
+    )
+    unban_reason: str | None = Field(
+        description="Motivo del desbaneo manual, si aplica.",
+        default=None,
+        example="manual",
+    )

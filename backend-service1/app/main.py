@@ -42,9 +42,10 @@ sistema de baneo de SSH por web.
   sesión con JWT y restauración de contraseña con tokens volátiles en Redis.
 * **Configuración:** parámetros de baneo (`maxretry`, `bantime`, `findtime`) y
   lista blanca de IPs/subredes.
+* **Issue #7:** Gestión de IPs baneadas, historial y desbaneo manual.
 * **Persistencia:** todas las claves viven en Redis
   (`admin:credentials`, `admin:initialized`, `reset_token:<token>`,
-  `config:settings`, `config:whitelist`).
+  `config:settings`, `config:whitelist`, `ips:banned`, `ips:history`).
 
 Los endpoints de IPs baneadas e historial se agregan en la Issue #7.
 """

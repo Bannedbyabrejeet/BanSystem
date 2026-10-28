@@ -1,9 +1,9 @@
 # Bannedbyabrejeet: Estado Actual y Tareas Pendientes
 
-> **Última actualización:** 2026-10-21
+> **Última actualización:** 2026-10-28
 > **Rama activa:** `8-issue-6-api-de-configuración-de-baneos-y-dashboard`
 > **Rama de referencia:** `main` — ya incluye el PR #25 (migración a Argon2id, fix de correo y documentación), merge `dc35f40`
-> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa y configuración de baneos/whitelist sobre Redis dockerizado.
+> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa y configuración de baneos/whitelist sobre Redis dockerizado. **Issue #7: Endpoints API para IPs baneadas, historial y desbaneo manual implementados.**
 
 Este documento reemplaza las estimaciones iniciales por el **estado real del repositorio**. Indica qué issues están cerradas, cuáles en curso y qué queda por hacer, con la evidencia correspondiente.
 
@@ -19,7 +19,7 @@ Este documento reemplaza las estimaciones iniciales por el **estado real del rep
 | **#4** | Setup de infraestructura y base de datos (Redis) | ✅ Completada | `docker-compose.yml`, `redis/redis.conf`, `scripts/verify_redis.sh`, `docs/DOCKER_REDIS.md` |
 | **#5** | Autenticación de administrador | ✅ Completada | `backend-service1/`, `frontend-admin/`, `README.md` |
 | **#6** | Parámetros de baneo, findtime y whitelist (API + vista) | ✅ Completada | `app/api/v1/endpoints/config.py`, `app/services/config_service.py`, `tests/test_config_api.py`, `frontend-admin/src/components/config/` |
-| **#7** | IPs baneadas, historial y desbaneo manual | ⏳ Pendiente | — |
+| **#7** | IPs baneadas, historial y desbaneo manual | 🚧 En progreso | Endpoints API implementados: `GET /banned-ips/`, `POST /banned-ips/`, `DELETE /banned-ips/{ip}`, `GET /banned-ips/history/` |
 | **#8** | Servicio 2 (parser SSH + UFW) y visor de logs | ⏳ Pendiente | — |
 | **#24** | Migración de bcrypt a Argon2id | ✅ Completada | `backend-service1/app/core/security.py` |
 
