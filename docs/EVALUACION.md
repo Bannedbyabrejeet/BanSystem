@@ -11,13 +11,15 @@
 |---|---|
 | Tipo de proyecto | frontend |
 | Índice de calidad de servicios | **6/100** (mínimo 60) |
-| Criterios cumplidos | **8/15** |
+| Criterios cumplidos | **7/15** |
 | Aprobado (semáforo) | **NO** |
 | Código (LOC) | 6,812 |
 | Archivos de código | 75 |
 | Tests (archivos) | 12 |
-| Cobertura de líneas | 81.0% (mínimo 80%) |
+| Cobertura de líneas | 67.6% (mínimo 80%) |
 | Capas detectadas | vistas, servicios, estado |
+
+> **Qué no se consideró:** el repositorio publica un informe de cobertura que **no se aceptó** como medición (coverage.xml: el propio archivo se declara sintético ('synthetic')). Esos valores no se usan: el número de arriba sale de **ejecutar la suite** tal como está en el repositorio. Un artefacto de cobertura sirve cuando lo genera un runner sobre el mismo código; si declara líneas que el runner no puede ejecutar, no es una medición.
 
 > **Aprobado** exige cumplir **todos** los criterios del semáforo. No es una nota: sirve para ordenar y priorizar la revisión.
 
@@ -153,11 +155,16 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
     - ¿El acceso a datos ocurre desde lugares que no son los responsables?
     - ¿Se puede cambiar una parte sin tocar las demás?
 
-### 14. Cobertura de tests (Cob) — OK
+### 14. Cobertura de tests (Cob) — A REVISAR
 
 - **Qué mide:** Porcentaje de líneas de código ejecutadas por la suite de tests (cobertura real, no cantidad de archivos de test).
 - **Por qué importa:** Un test que existe pero no ejecuta el código no protege de nada: la cobertura muestra qué partes quedan sin verificar.
-- **Tu resultado:** **81.0%** de líneas cubiertas _(mínimo 80% de líneas)_
+- **Tu resultado:** **67.6%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.0%, backend-service2 84.4%) _(mínimo 80% de líneas)_
+- **Qué no se consideró:** el informe de cobertura publicado en el repositorio no se aceptó (coverage.xml: el propio archivo se declara sintético ('synthetic')).
+- **Para investigar la causa:**
+    - ¿Qué módulos o ramas del sistema nunca se ejecutan en los tests?
+    - ¿Los tests prueban el camino principal y los errores, o solo el caso feliz?
+    - ¿La suite se puede correr en CI sin base de datos ni servicios externos?
 
 ### 15. Vistas del frontend (Vistas) — OK
 
@@ -178,6 +185,7 @@ Criterios que hoy están en rojo y qué habría que cambiar para alcanzar el niv
 | Baja cohesión (Coh) | **2** unidad(es) con baja cohesión | máximo 0 | Separar en unidades con una sola responsabilidad; 0 clases con baja cohesión. |
 | Complejidad alta (Compl) | **47** bloque(s) de complejidad alta | máximo 5 por 1000 LOC (tenés 6812 LOC) | Extraer ramas y reglas a funciones con nombre propio; ≤5 bloques por 1000 LOC. |
 | Acoplamiento alto (Acop) | **16** unidad(es) con acoplamiento alto | máximo 2 por 1000 LOC | Reducir dependencias directas entre unidades; ≤2 por 1000 LOC. |
+| Cobertura de tests (Cob) | **67.6%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.0%, backend-service2 84.4%) | mínimo 80% de líneas | Publicar cobertura (o correr la suite con coverage) y cubrir ≥80% de líneas. |
 
 > Empezá por las señales de seguridad (**SEC**, **SQL**) y por la **duplicación**: son las que más pesan en el índice y las más rápidas de verificar a ojo.
 
