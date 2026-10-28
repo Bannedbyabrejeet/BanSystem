@@ -5,30 +5,31 @@
 Detalle completo en [`docs/EVALUACION.md`](docs/EVALUACION.md).
 <!-- calidad:fin -->
 
-# BannedbyAbrejeet — Configuración de baneos, whitelist y autenticación
+# BannedbyAbrejeet — Configuración de baneos, whitelist, autenticación y motor SSH
 
-Implementación de Backend A (FastAPI + Redis) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT, recuperación de contraseña y configuración de baneos, sobre Redis dockerizado. Cubre las issues **#4** (infraestructura), **#5** (autenticación), **#6** (parámetros de baneo, ventana de tolerancia y whitelist) y **#24** (migración de hash a Argon2id). Esta entrega no incluye configuración UFW ni Servicio 2 (Flask).
+Implementación de Backend A (FastAPI + Redis), Backend B (motor de seguridad + lector de logs SSH) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT, recuperación de contraseña y configuración de baneos, sobre Redis dockerizado. Cubre las issues **#4** (infraestructura), **#5** (autenticación), **#6** (parámetros de baneo, ventana de tolerancia y whitelist), **#7 Backend B** (lector/parser SSH y motor de seguridad) y **#24** (migración de hash a Argon2id). Esta entrega no incluye configuración UFW ni el visor del Frontend B.
 
 ## Estado del proyecto
 
-Esta entrega corresponde a las **issues #5 (autenticación)**, **#6 (configuración de baneos)** y **#24 (Argon2id)**. Cubre el Servicio 1 (FastAPI) y el Frontend A (React); **no** incluye todavía el Servicio 2 (Flask), el Frontend B (Vue) ni la configuración de UFW.
+Esta entrega corresponde a las **issues #5 (autenticación)**, **#6 (configuración de baneos)**, **#7 Backend B (lector de logs SSH y motor de seguridad)** y **#24 (Argon2id)**. Cubre el Servicio 1 (FastAPI), el motor del Servicio 2 (Python/Flask) y el Frontend A (React); **no** incluye todavía la ejecución de UFW, el consumo del stream de desbaneo ni el Frontend B (Vue).
 
 ### Implementado
 
 - **Infraestructura (Issue #4):** Redis 7.2 dockerizado con persistencia AOF + RDB, healthcheck y `scripts/verify_redis.sh`. Guía operativa en [`docs/DOCKER_REDIS.md`](docs/DOCKER_REDIS.md).
 - **Autenticación (Issue #5):** setup único atómico, login con JWT, sesión validada contra `session_version` y recuperación de contraseña por correo (token opaco con TTL de 900 s).
 - **Configuración (Issue #6 / US-02, US-08, US-09):** endpoints y formulario del dashboard para `maxretry`, `bantime` y `findtime`, más alta/baja de IPs y subredes de la lista blanca. Las IPs locales `127.0.0.1` y `::1` siempre están presentes y no pueden eliminarse (`409`).
+- **Motor de seguridad (Issue #7 Backend B / BACK2-01, BACK2-02):** lector continuo de `auth.log` con rotación/truncado, parser de fallos y éxitos SSH, lectura dinámica de la configuración Redis, whitelist exacta/CIDR y contador deslizante `failed:<IP>` con `findtime` y `maxretry`.
 - **Hash de contraseñas (Issue #24):** Argon2id mediante `argon2-cffi`, en sustitución de bcrypt.
 - **Correo:** envío real por SMTP (probado con Gmail) o modo `log` para desarrollo.
 - **Frontend A:** vistas de setup, login, "olvidé mi contraseña", restablecer contraseña y dashboard con los paneles de configuración y whitelist.
 - **Decisiones y contratos:** [ADR 001](docs/ADR001-UnificacionMultifrontend.md) (estrategia multi-framework) y [contrato de desbaneo](docs/contrato-desbaneo.yaml).
-- **Documentación técnica:** [índice de `docs/`](docs/README.md), [esquema de claves Redis](docs/REDIS_SCHEMA.md) y [estado del proyecto por issue](docs_contexto/04_estado_actual_y_tareas.md).
+- **Documentación técnica:** [índice de `docs/`](docs/README.md), [esquema de claves Redis](docs/REDIS_SCHEMA.md), [evidencia del motor SSH](docs/evidencias/issue-07-backend-b.md) y [estado del proyecto por issue](docs_contexto/04_estado_actual_y_tareas.md).
 
 ### Pendiente
 
-- **Issue #7:** API y vista de IPs baneadas, historial y desbaneo manual.
-- **Issue #8:** Servicio 2 (Flask) — parser de logs SSH, motor de reglas y bloqueo con UFW — y su visor en el Frontend B (Vue).
-- **Issue #3:** definición de privilegios de Docker y rutas de logs SSH.
+- **Issue #7 (Servicio 1):** vista del Frontend A para IPs baneadas e historial; la API ya existe.
+- **Issue #8:** ejecución de UFW (bloqueo/desbloqueo), consumo del stream de desbaneo y visor de logs en el Frontend B (Vue).
+- **Issue #3:** definición final de privilegios y ruta de logs en el host.
 
 El detalle completo, con evidencia por issue, está en [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
@@ -79,6 +80,19 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 │   ├── tests/                     # Pytest (85 tests con Redis)
 │   ├── requirements.txt
 │   └── requirements-dev.txt
+├── backend-service2/          # Backend B — motor de seguridad y lector SSH
+│   ├── app/
+│   │   ├── parser.py          # auth.log -> SSHEvent (fallo/éxito)
+│   │   ├── tailer.py          # tail -f con rotación y truncado
+│   │   ├── redis_config.py    # config:settings + config:whitelist
+│   │   ├── engine.py          # ventana findtime + maxretry (sin UFW)
+│   │   ├── monitor.py         # bucle tailer + parser + motor
+│   │   ├── runner.py          # python -m app
+│   │   └── main.py            # healthcheck Flask
+│   ├── tests/                 # 53 tests con fakeredis
+│   ├── scripts/demo_engine.py # evidencia de contador y reset
+│   ├── requirements.txt
+│   └── requirements-dev.txt
 ├── frontend-admin/            # Frontend A — React 18 + Vite
 │   └── src/
 │       ├── api/client.js          # Axios + ApiError + almacenamiento del token
@@ -119,6 +133,8 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 |---|---|---|
 | Redis 7.2 | `docker compose up -d redis` | `127.0.0.1:6379` |
 | Servicio 1 (FastAPI) | `python -m uvicorn` local | `127.0.0.1:8000` |
+| Servicio 2 (motor) | `python -m app` local | — (proceso continuo) |
+| Servicio 2 (health) | `flask --app app.main run` local | `127.0.0.1:5000` |
 | Frontend A (React) | `npm run dev` local | `127.0.0.1:3000` |
 
 Redis queda en un contenedor porque necesita un servidor real con persistencia en disco (AOF + RDB sobre volumen nombrado). El backend lo alcanza por `127.0.0.1`, así que la comunicación es por el loopback del host, no por una red de Docker.
@@ -209,6 +225,33 @@ La API queda disponible en:
 
 Si Redis no está levantado, el arranque espera `REDIS_STARTUP_RETRIES` intentos y después termina con error. Los endpoints de autenticación devuelven `503` con el detalle `Servicio de autenticación no disponible` mientras Redis no responda.
 
+## Levantar el Servicio 2 (motor de seguridad)
+
+```bash
+cd backend-service2
+python -m pip install --target ../backend-service1/.pylibs -r requirements.txt
+PYTHONPATH=../backend-service1/.pylibs python -m app
+```
+
+El motor sigue el archivo indicado por `SSH_LOG_PATH` (por defecto
+`/var/log/auth.log`) y, con `LOG_READ_FROM_START=false`, procesa solo los
+eventos nuevos. Para leer un archivo de prueba desde el principio:
+
+```bash
+SSH_LOG_PATH=/tmp/auth.log LOG_READ_FROM_START=true python -m app
+```
+
+El healthcheck Flask se levanta aparte:
+
+```bash
+PYTHONPATH=../backend-service1/.pylibs flask --app app.main run --host 127.0.0.1 --port 5000
+curl -s http://127.0.0.1:5000/health
+```
+
+**No ejecuta UFW ni escribe `ips:banned`**: al alcanzar `maxretry` emite la
+decisión `ban_required` y registra una advertencia en consola. El bloqueo real
+corresponde a la siguiente issue.
+
 ## Levantar Frontend A
 
 ```bash
@@ -257,6 +300,7 @@ El servidor que aloje `build/` debe usar fallback de History API hacia `index.ht
 | `GET` | `/api/v1/config/whitelist` | Lista blanca y entradas locales protegidas |
 | `POST` | `/api/v1/config/whitelist` | Agrega una IP o subred (normaliza CIDR) |
 | `DELETE` | `/api/v1/config/whitelist?entry=...` | Elimina una entrada; `409` si es `127.0.0.1` o `::1` |
+| `GET` | `/health` (Servicio 2, Flask) | Estado del motor y de Redis |
 
 Los endpoints de configuración requieren el JWT del administrador. Cuando Redis no responde, devuelven `503` con el detalle `Servicio de autenticación no disponible`, en lugar de un `500`.
 
@@ -280,6 +324,21 @@ TEST_REDIS_URL="redis://127.0.0.1:6399/15" PYTHONPATH=.pylibs python -m pytest -
 ```
 
 Con el Redis de pruebas se ejecutan **85 tests**. Sin `TEST_REDIS_URL` se ejecutan 18 y se omiten 67, con un mensaje explicativo en la salida.
+
+### Tests del Servicio 2
+
+No necesitan Redis real: usan `fakeredis` y no tocan la base de desarrollo.
+
+```bash
+cd backend-service2
+python -m pip install --target ../backend-service1/.pylibs -r requirements.txt -r requirements-dev.txt
+PYTHONPATH=../backend-service1/.pylibs python -m pytest -q       # -> 53 passed
+PYTHONPATH=../backend-service1/.pylibs python scripts/demo_engine.py
+```
+
+La salida del demo muestra el contador `1 -> 2 -> 3`, la decisión
+`ban_required` y el reinicio a `1` al expirar `findtime`. Evidencia completa en
+[`docs/evidencias/issue-07-backend-b.md`](docs/evidencias/issue-07-backend-b.md).
 
 ## Verificación manual del flujo
 

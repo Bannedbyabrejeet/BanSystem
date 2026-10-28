@@ -17,6 +17,7 @@
 | [`sequencia-inter_servicios.mmd`](sequencia-inter_servicios.mmd) · [`.png`](sequencia-inter_servicios.png) | Diagrama de secuencia del flujo de desbaneo manual (Admin → Frontend → Servicio 1 → Redis → Servicio 2 → UFW) | 2026-09-04 |
 | [`EVALUACION.md`](EVALUACION.md) | Informe de calidad y autoría generado por la cátedra. **No editar a mano**: se regenera en cada evaluación | 2026-10-17 |
 | [`evidencias/issue-06.md`](evidencias/issue-06.md) | Capturas del dashboard, persistencia en Redis y resultados de las pruebas de la Issue #6 | 2026-10-21 |
+| [`evidencias/issue-07-backend-b.md`](evidencias/issue-07-backend-b.md) | Pruebas del lector SSH/motor, contador, whitelist y reset por `findtime` | 2026-10-28 |
 | [`historico/`](historico/) | Borradores descartados, conservados solo como registro del diseño original | — |
 
 ---
@@ -41,7 +42,7 @@ En la raíz del repositorio, [`../PROYECTO.md`](../PROYECTO.md) (enunciado del p
 Los dos acuerdos entre servicios que **no deben cambiar** sin actualizar esta documentación y avisar al equipo:
 
 1. **Esquema de claves Redis** → [`REDIS_SCHEMA.md`](REDIS_SCHEMA.md)
-   Claves de administración (`admin:credentials`, `admin:initialized`, `reset_token:*`), de configuración (`config:settings`, `config:whitelist`), de conteo (`failed:<IP>`), de baneo (`ban:*`, `history:*`) y el stream de desbaneo.
+   Claves de administración (`admin:credentials`, `admin:initialized`, `reset_token:*`), de configuración (`config:settings`, `config:whitelist`), de conteo (`failed:<IP>`), de baneo (`ips:banned`, `ips:history`) y el stream de desbaneo.
 2. **Desbaneo manual** → [`contrato-desbaneo.yaml`](contrato-desbaneo.yaml)
    Eventos `UNBAN` publicados por el Servicio 1 en `security:events:unban` y consumidos por el Servicio 2.
 

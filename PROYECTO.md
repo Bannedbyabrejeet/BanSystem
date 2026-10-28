@@ -371,7 +371,7 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
 
 ---
 
-## 4. Estado de Implementación (actualizado 2026-10-21)
+## 4. Estado de Implementación (actualizado 2026-10-28)
 
 > Apéndice de seguimiento. No modifica el contrato de alcance definido en las secciones anteriores; solo refleja el avance real del repositorio. Detalle por issue en [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
@@ -383,22 +383,23 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
 - **Estrategia multi-framework de frontends (Issue #1 / Sync Point 3):** `docs/ADR001-UnificacionMultifrontend.md`.
 - **Autenticación de administrador (Issue #5):** Épica 1 completa — setup único, login, sesión JWT, recuperación de contraseña con TTL y política de contraseñas.
 - **Configuración de seguridad (Issue #6):** Épica 2 completa en el Servicio 1 y el Frontend A — parámetros `maxretry`, `bantime`, `findtime` (US-02/US-09) y lista blanca con `127.0.0.1` y `::1` protegidas (US-08).
+- **Servicio 2 — BACK2-01 / BACK2-02 (Issue #7 Backend B):** lector continuo de auth logs, parser de fallos/éxitos, lectura de `config:settings`/`config:whitelist`, contador `failed:<IP>` y ventana `findtime` en `backend-service2/`.
 - **Hash de contraseñas (Issue #24):** Argon2id (`argon2-cffi`) en reemplazo de bcrypt.
 - **Correo:** entrega real por SMTP (probado con Gmail) además del modo `log`.
 - **Evaluación de calidad (cátedra):** informe generado automáticamente en `docs/EVALUACION.md` (2026-10-17) — índice **7/100**, **9/15** criterios cumplidos, **NO aprobado**. Detalle y acciones derivadas en §8 de [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
 ### Pendiente
 
-- **Consumo de la configuración en el Servicio 2:** el motor de evaluación debe leer `config:settings` y `config:whitelist` (Issue #8).
-- **Épica 3 (logs SSH):** parser y visor (Issue #8).
-- **Épica 4 (baneo automático):** motor de reglas y bloqueo con UFW (Issue #8), dependiente del spike #3.
-- **Épica 5 (gestión de IPs):** historial, estado y desbaneo manual (Issue #7).
-- **Servicio 2 (Flask) y Frontend B (Vue):** no iniciados.
+- **Épica 4 (baneo automático):** falta ejecutar UFW a partir de la decisión
+  `ban_required` y persistir `ips:banned` (Issue #8), dependiente del spike #3.
+- **Épica 5 (gestión de IPs):** la API del Servicio 1 ya está en `main`; falta
+  la vista del Frontend A.
+- **Frontend B (Vue):** visor de logs y desbaneo manual, aún no iniciado.
 
 ### Estado de tareas por desarrollador
 
 | Área | Tareas cerradas | Tareas pendientes |
 |---|---|---|
-| Desarrollador 1 | INFRA-01, BACK1-01, BACK1-02, FRONT-01, FRONT-02 | BACK1-03, FRONT-03 |
-| Desarrollador 2 | — | BACK2-01, BACK2-02, BACK2-03, BACK2-04, FRONT-04, FRONT-05 |
+| Desarrollador 1 | INFRA-01, BACK1-01, BACK1-02, FRONT-01, FRONT-02 | BACK1-03 (vista), FRONT-03 |
+| Desarrollador 2 | BACK2-01, BACK2-02 | BACK2-03, BACK2-04, FRONT-04, FRONT-05 |
 

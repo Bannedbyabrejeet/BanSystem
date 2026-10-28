@@ -240,6 +240,26 @@ PEXPIRE failed:203.0.113.42 <findtime * 1000>
 ZREMRANGEBYSCORE failed:203.0.113.42 -inf <now - findtime>
 ```
 
+### Implementación vigente (Servicio 2, Issue #7)
+
+El motor agrupa las cuatro operaciones en una transacción `MULTI/EXEC`:
+
+1. `ZREMRANGEBYSCORE failed:<IP> -inf (<now - findtime)` elimina los intentos
+   **estrictamente anteriores** a la ventana; un intento en el borde exacto
+   sigue contando.
+2. `ZADD failed:<IP> <now> "<uuid>"` agrega el intento actual (el miembro es
+   único para no perder eventos con el mismo timestamp).
+3. `ZCARD failed:<IP>` devuelve el contador dentro de la ventana.
+4. `EXPIRE failed:<IP> <findtime>` renueva el TTL desde el último intento.
+
+Antes de tocar el ZSET, el motor comprueba `config:whitelist` (IP exacta o
+red CIDR) y descarta el evento si hay coincidencia (US-08). También ignora el
+evento si `HEXISTS ips:banned <IP>` es verdadero. Un intento exitoso no
+incrementa el contador. Las líneas auxiliares de OpenSSH (`Invalid user`,
+`pam_unix ... authentication failure`, `Connection closed...`) se parsean como
+fallo pero no se cuentan, para no duplicar el mismo intento que ya registra la
+línea `Failed password/publickey`.
+
 ### Ejemplo `redis-cli`
 ```bash
 # Registrar intento fallido

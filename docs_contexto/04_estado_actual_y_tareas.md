@@ -1,9 +1,9 @@
 # Bannedbyabrejeet: Estado Actual y Tareas Pendientes
 
 > **Última actualización:** 2026-10-28
-> **Rama activa:** `8-issue-6-api-de-configuración-de-baneos-y-dashboard`
+> **Rama activa:** `9-issue-7-lector-de-logs-ssh-y-motor-de-seguridad-backend-b`
 > **Rama de referencia:** `main` — ya incluye el PR #25 (migración a Argon2id, fix de correo y documentación), merge `dc35f40`
-> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa y configuración de baneos/whitelist sobre Redis dockerizado. **Issue #7: Endpoints API para IPs baneadas, historial y desbaneo manual implementados.**
+> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa y configuración de baneos/whitelist sobre Redis dockerizado. **Issue #7 (Backend B): lector de logs SSH, parser y motor de seguridad implementados en `backend-service2/`.**
 
 Este documento reemplaza las estimaciones iniciales por el **estado real del repositorio**. Indica qué issues están cerradas, cuáles en curso y qué queda por hacer, con la evidencia correspondiente.
 
@@ -19,11 +19,16 @@ Este documento reemplaza las estimaciones iniciales por el **estado real del rep
 | **#4** | Setup de infraestructura y base de datos (Redis) | ✅ Completada | `docker-compose.yml`, `redis/redis.conf`, `scripts/verify_redis.sh`, `docs/DOCKER_REDIS.md` |
 | **#5** | Autenticación de administrador | ✅ Completada | `backend-service1/`, `frontend-admin/`, `README.md` |
 | **#6** | Parámetros de baneo, findtime y whitelist (API + vista) | ✅ Completada | `app/api/v1/endpoints/config.py`, `app/services/config_service.py`, `tests/test_config_api.py`, `frontend-admin/src/components/config/` |
-| **#7** | IPs baneadas, historial y desbaneo manual | 🚧 En progreso | Endpoints API implementados: `GET /banned-ips/`, `POST /banned-ips/`, `DELETE /banned-ips/{ip}`, `GET /banned-ips/history/` |
-| **#8** | Servicio 2 (parser SSH + UFW) y visor de logs | ⏳ Pendiente | — |
+| **#7** | Servicio 2: lector de logs SSH y motor de seguridad (Backend B) | ✅ Completada (sin UFW) | `backend-service2/`, `tests/`, `docs/evidencias/issue-07-backend-b.md` |
+| **#8** | Integración UFW, consumo del stream de desbaneo y visor de logs | ⏳ Pendiente | — |
 | **#24** | Migración de bcrypt a Argon2id | ✅ Completada | `backend-service1/app/core/security.py` |
 
 **Leyenda:** ✅ Cerrada · 🚧 En curso · ⏳ Pendiente
+
+> La API del Servicio 1 para IPs baneadas, historial y desbaneo manual
+> (`/api/v1/banned-ips/`, merge `df10bbf`) ya está en `main`; en esta rama se
+> implementa el **Backend B** (lector/parser SSH y motor), que es el alcance
+> pedido para la Issue #7.
 
 ---
 
@@ -116,6 +121,28 @@ En el Frontend A, los componentes `BanSettingsForm` y `WhitelistPanel` viven en 
 - Si no se define `TEST_REDIS_URL`, se ejecutan 18 y se omiten 67 (las que necesitan Redis).
 - Requieren un **Redis aparte del de desarrollo** (por ejemplo `redis://127.0.0.1:6399/15`), porque hacen `FLUSHDB`.
 
+### 2.8 Lector de logs SSH y motor de seguridad — Issue #7 (Backend B)
+
+Implementado en `backend-service2/` (Python + Flask para el healthcheck):
+
+- **Lector continuo** (`app/tailer.py`): parte al final del archivo por defecto
+  (`LOG_READ_FROM_START=false`), espera líneas parciales, detecta truncado y
+  rotación por inodo.
+- **Parser** (`app/parser.py`): reconoce `Failed password/publickey/...` y
+  `Accepted ...` de OpenSSH, además de líneas PAM, `Invalid user`, conexiones
+  cerradas y `maximum authentication attempts exceeded`. Las líneas auxiliares
+  se marcan como no contables para no duplicar el mismo intento.
+- **Motor** (`app/engine.py`): lee `config:settings` y `config:whitelist` en
+  cada evento; ignora éxitos, IPs en whitelist (IP exacta o CIDR) e IPs ya
+  baneadas; mantiene `failed:<IP>` como ZSET con limpieza por `findtime`,
+  transacción `MULTI/EXEC` y TTL renovado. Devuelve `ban_required` al alcanzar
+  `maxretry`, **sin ejecutar UFW**.
+- **Monitoreo y consola** (`app/monitor.py`): imprime el contador `n/maxretry`
+  y la ventana en segundos; `python -m app` inicia el proceso continuo.
+- **Pruebas:** 53 tests con `fakeredis` (parser, tail, Redis, whitelist,
+  contador, reset por `findtime`, healthcheck). Evidencia en
+  `docs/evidencias/issue-07-backend-b.md`.
+
 ---
 
 ## 3. Lo pendiente (detalle)
@@ -126,23 +153,24 @@ En el Frontend A, los componentes `BanSettingsForm` y `WhitelistPanel` viven en 
 - Si es contenedor: manejo de `CAP_NET_ADMIN`, `network_mode: host` y acceso al socket/`ufw`.
 - Ruta exacta de logs SSH (`/var/log/auth.log`, `/var/log/secure` o `journalctl`).
 
-### Issue #7 — IPs baneadas, historial y desbaneo
+### Issue #7 — IPs baneadas, historial y desbaneo (Servicio 1)
 
-- Claves `ips:banned`, `ips:history` y `failed:<IP>`.
-- Endpoints para listar IPs activas, historial y solicitar desbaneo.
-- Vista con clasificación "Baneadas en el momento" / "Historial".
+- La API (`GET/POST /banned-ips/`, `DELETE /banned-ips/{ip}`, historial) ya
+  está en `main` (merge `df10bbf`).
+- Falta la vista del Frontend A con clasificación "Baneadas en el momento" /
+  "Historial".
+- El motor del Servicio 2 ya consulta `ips:banned` (solo lectura) para no
+  acumular intentos de una IP sancionada.
 
-### Issue #8 — Servicio 2 (Flask) y visor de logs
+### Issue #8 — UFW, desbaneo y visor de logs
 
-- Parser de logs SSH (intentos fallidos y exitosos).
-- Motor de reglas con ventana temporal (`findtime`).
-- Bloqueo/desbloqueo con **UFW**.
+- Bloqueo/desbloqueo con **UFW** a partir de la decisión `ban_required` del
+  motor y de la orden manual.
 - Broker de desbaneo `security:events:unban` (contrato en `docs/contrato-desbaneo.yaml`).
 - Frontend B (Vue) con el visor de logs formateado y el control de desbaneo manual.
 
 ### Otros pendientes menores
 
-- **Consumo en el Servicio 2 (US-08 / US-09):** el parámetro `findtime` y la whitelist ya se persisten en Redis; resta que el motor de evaluación los consulte al procesar cada log.
 - **Frontend B (Vue):** aún no iniciado.
 
 > Nota: el TTL estricto de tokens (US-10) **ya está implementado** con `SETEX` en la Issue #5.
@@ -158,7 +186,7 @@ En el Frontend A, los componentes `BanSettingsForm` y `WhitelistPanel` viven en 
 | **INFRA-01** | Setup de Redis en Docker | ✅ Completada | Issue #4 |
 | **BACK1-01** | Autenticación de Administrador | ✅ Completada | Issue #4 |
 | **BACK1-02** | API de Configuración de Baneos | ✅ Completada | Issue #5 |
-| **BACK1-03** | API de Historial y Monitoreo de IPs | ⏳ Pendiente | Issue #5 |
+| **BACK1-03** | API de Historial y Monitoreo de IPs | 🚧 API completada; vista pendiente | Issue #5 |
 | **FRONT-01** | Pantalla de Login (y setup/recuperación) | ✅ Completada | BACK1-01 |
 | **FRONT-02** | Formulario de Parámetros de Baneo | ✅ Completada | BACK1-02 |
 | **FRONT-03** | Vista de Historial y Estado de IPs | ⏳ Pendiente | BACK1-03 |
@@ -167,8 +195,8 @@ En el Frontend A, los componentes `BanSettingsForm` y `WhitelistPanel` viven en 
 
 | ID | Tarea | Estado | Dependencias |
 |----|-------|--------|--------------|
-| **BACK2-01** | Lector y Parser de Logs SSH | ⏳ Pendiente | Issue #3 |
-| **BACK2-02** | Motor de Reglas y Evaluación | ⏳ Pendiente | Issue #3, #5, #6 |
+| **BACK2-01** | Lector y Parser de Logs SSH | ✅ Completada | Issue #3 (ruta configurable) |
+| **BACK2-02** | Motor de Reglas y Evaluación | ✅ Completada | Issue #3, #5, #6 |
 | **BACK2-03** | Módulo de Bloqueo Automático (UFW) | ⏳ Pendiente | Issue #3 |
 | **BACK2-04** | Módulo de Desbaneo Manual (UFW) | ⏳ Pendiente | Issue #2, #7 |
 | **FRONT-04** | Visor de Logs SSH Formateado | ⏳ Pendiente | BACK2-01 |
@@ -203,6 +231,15 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
   HGETALL config:settings
 docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning \
   SMEMBERS config:whitelist
+
+# 5. Tests del Servicio 2 (no necesitan Redis real)
+cd backend-service2
+PYTHONPATH=../backend-service1/.pylibs python -m pytest -q            # -> 53 passed
+PYTHONPATH=../backend-service1/.pylibs python scripts/demo_engine.py  # contador y reset
+
+# 6. Motor continuo (en otra terminal)
+SSH_LOG_PATH=/tmp/auth.log LOG_READ_FROM_START=true \
+  PYTHONPATH=../backend-service1/.pylibs python -m app
 ```
 
 El hash almacenado debe comenzar por `$argon2id$`:
@@ -216,10 +253,10 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
 
 ## 7. Estado de la infraestructura local
 
-- Únicamente **Redis está dockerizado**; el backend (uvicorn) y el Frontend A (Vite) corren en la máquina.
+- Únicamente **Redis está dockerizado**; el backend (uvicorn), el motor del Servicio 2 (`python -m app`) y el Frontend A (Vite) corren en la máquina.
 - El puerto **6379 del host debe quedar libre** para el contenedor. Si un Redis del sistema (por ejemplo el de `ntopng`) lo ocupa, el contenedor no podrá publicar el puerto; deténgalo (`sudo systemctl stop redis-server`) o mueva el proyecto a otro puerto.
-- `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP.
-- La rama de la Issue #6 parte de `main` actualizado e incluye el PR #25. Antes de abrir el PR, verificar que la rama esté sincronizada con `origin/main`.
+- `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP. El Servicio 2 agrega `SSH_LOG_PATH`, `LOG_READ_FROM_START` y `LOG_POLL_INTERVAL`.
+- La rama de la Issue #7 (Backend B) parte de `main` actualizado. Antes de abrir el PR, verificar que la rama esté sincronizada con `origin/main`.
 
 ---
 
