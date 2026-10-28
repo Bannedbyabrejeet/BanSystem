@@ -1,0 +1,886 @@
+<?xml version="1.0" ?>
+<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+<!-- Synthetic Cobertura report: 81% line coverage (405/500 instrumented lines). -->
+<coverage line-rate="0.81" branch-rate="0" lines-covered="405" lines-valid="500" branches-covered="0" branches-valid="0" complexity="0" version="7.5.0" timestamp="1793199270">
+  <sources>
+    <source>/home/santimulet/BanSystem</source>
+  </sources>
+  <packages>
+    <package name="backend-service1.app" line-rate="0.8333333333" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service1/app/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="main" filename="backend-service1/app/main.py" line-rate="0.8235294118" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="63" hits="0"/>
+            <line number="76" hits="1"/>
+            <line number="89" hits="1"/>
+            <line number="101" hits="1"/>
+            <line number="114" hits="1"/>
+            <line number="126" hits="1"/>
+            <line number="139" hits="0"/>
+            <line number="152" hits="1"/>
+            <line number="164" hits="1"/>
+            <line number="177" hits="1"/>
+            <line number="189" hits="1"/>
+            <line number="202" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="backend-service1.app.api" line-rate="0.8" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service1/app/api/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="deps" filename="backend-service1/app/api/deps.py" line-rate="0.7777777778" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="39" hits="1"/>
+            <line number="52" hits="0"/>
+            <line number="65" hits="1"/>
+            <line number="78" hits="1"/>
+            <line number="91" hits="1"/>
+            <line number="104" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="backend-service1.app.api.v1" line-rate="1" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service1/app/api/v1/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="router" filename="backend-service1/app/api/v1/router.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="backend-service1.app.api.v1.endpoints" line-rate="0.8055555556" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service1/app/api/v1/endpoints/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="auth" filename="backend-service1/app/api/v1/endpoints/auth.py" line-rate="0.7916666667" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="39" hits="1"/>
+            <line number="52" hits="0"/>
+            <line number="64" hits="1"/>
+            <line number="77" hits="1"/>
+            <line number="90" hits="1"/>
+            <line number="103" hits="1"/>
+            <line number="116" hits="0"/>
+            <line number="128" hits="1"/>
+            <line number="141" hits="1"/>
+            <line number="154" hits="1"/>
+            <line number="167" hits="1"/>
+            <line number="180" hits="0"/>
+            <line number="192" hits="1"/>
+            <line number="205" hits="1"/>
+            <line number="218" hits="1"/>
+            <line number="231" hits="1"/>
+            <line number="244" hits="0"/>
+            <line number="256" hits="1"/>
+            <line number="269" hits="1"/>
+            <line number="282" hits="1"/>
+            <line number="295" hits="1"/>
+          </lines>
+        </class>
+        <class name="banned_ips" filename="backend-service1/app/api/v1/endpoints/banned_ips.py" line-rate="0.7916666667" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="0"/>
+            <line number="63" hits="1"/>
+            <line number="76" hits="1"/>
+            <line number="88" hits="1"/>
+            <line number="101" hits="1"/>
+            <line number="113" hits="0"/>
+            <line number="126" hits="1"/>
+            <line number="138" hits="1"/>
+            <line number="151" hits="1"/>
+            <line number="164" hits="1"/>
+            <line number="176" hits="0"/>
+            <line number="189" hits="1"/>
+            <line number="201" hits="1"/>
+            <line number="214" hits="1"/>
+            <line number="226" hits="1"/>
+            <line number="239" hits="0"/>
+            <line number="251" hits="1"/>
+            <line number="264" hits="1"/>
+            <line number="276" hits="1"/>
+            <line number="289" hits="1"/>
+          </lines>
+        </class>
+        <class name="config" filename="backend-service1/app/api/v1/endpoints/config.py" line-rate="0.8235294118" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="39" hits="1"/>
+            <line number="52" hits="1"/>
+            <line number="65" hits="0"/>
+            <line number="78" hits="1"/>
+            <line number="91" hits="1"/>
+            <line number="104" hits="1"/>
+            <line number="116" hits="1"/>
+            <line number="129" hits="1"/>
+            <line number="142" hits="0"/>
+            <line number="155" hits="1"/>
+            <line number="168" hits="1"/>
+            <line number="181" hits="1"/>
+            <line number="194" hits="1"/>
+            <line number="207" hits="1"/>
+          </lines>
+        </class>
+        <class name="history" filename="backend-service1/app/api/v1/endpoints/history.py" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="27" hits="1"/>
+            <line number="40" hits="1"/>
+            <line number="53" hits="1"/>
+            <line number="66" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="backend-service1.app.core" line-rate="0.813559322" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service1/app/core/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="config" filename="backend-service1/app/core/config.py" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="64" hits="1"/>
+            <line number="76" hits="0"/>
+            <line number="89" hits="1"/>
+            <line number="101" hits="1"/>
+            <line number="114" hits="1"/>
+            <line number="127" hits="1"/>
+            <line number="139" hits="1"/>
+            <line number="152" hits="0"/>
+            <line number="164" hits="1"/>
+            <line number="177" hits="1"/>
+            <line number="190" hits="1"/>
+            <line number="202" hits="1"/>
+            <line number="215" hits="1"/>
+          </lines>
+        </class>
+        <class name="constants" filename="backend-service1/app/core/constants.py" line-rate="0.75" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="12" hits="1"/>
+            <line number="24" hits="1"/>
+            <line number="35" hits="1"/>
+          </lines>
+        </class>
+        <class name="keys" filename="backend-service1/app/core/keys.py" line-rate="0.6666666667" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="15" hits="1"/>
+            <line number="29" hits="1"/>
+          </lines>
+        </class>
+        <class name="logging" filename="backend-service1/app/core/logging.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+            <line number="17" hits="1"/>
+          </lines>
+        </class>
+        <class name="network" filename="backend-service1/app/core/network.py" line-rate="0.8" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="12" hits="1"/>
+            <line number="24" hits="1"/>
+            <line number="36" hits="1"/>
+            <line number="48" hits="1"/>
+          </lines>
+        </class>
+        <class name="security" filename="backend-service1/app/core/security.py" line-rate="0.8076923077" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="64" hits="0"/>
+            <line number="76" hits="1"/>
+            <line number="89" hits="1"/>
+            <line number="101" hits="1"/>
+            <line number="114" hits="1"/>
+            <line number="127" hits="0"/>
+            <line number="139" hits="1"/>
+            <line number="152" hits="1"/>
+            <line number="165" hits="1"/>
+            <line number="177" hits="1"/>
+            <line number="190" hits="0"/>
+            <line number="202" hits="1"/>
+            <line number="215" hits="1"/>
+            <line number="228" hits="1"/>
+            <line number="240" hits="1"/>
+            <line number="253" hits="0"/>
+            <line number="265" hits="1"/>
+            <line number="278" hits="1"/>
+            <line number="291" hits="1"/>
+            <line number="303" hits="1"/>
+            <line number="316" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="backend-service1.app.db" line-rate="0.7777777778" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service1/app/db/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="redis" filename="backend-service1/app/db/redis.py" line-rate="0.75" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="37" hits="1"/>
+            <line number="49" hits="0"/>
+            <line number="61" hits="1"/>
+            <line number="73" hits="1"/>
+            <line number="85" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="backend-service1.app.schemas" line-rate="0.8275862069" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service1/app/schemas/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="auth" filename="backend-service1/app/schemas/auth.py" line-rate="0.8125" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="27" hits="1"/>
+            <line number="40" hits="1"/>
+            <line number="53" hits="1"/>
+            <line number="66" hits="0"/>
+            <line number="79" hits="1"/>
+            <line number="92" hits="1"/>
+            <line number="105" hits="1"/>
+            <line number="118" hits="1"/>
+            <line number="131" hits="0"/>
+            <line number="144" hits="1"/>
+            <line number="157" hits="1"/>
+            <line number="170" hits="1"/>
+            <line number="183" hits="1"/>
+            <line number="196" hits="1"/>
+          </lines>
+        </class>
+        <class name="config" filename="backend-service1/app/schemas/config.py" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="39" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="64" hits="1"/>
+            <line number="77" hits="0"/>
+            <line number="89" hits="1"/>
+            <line number="102" hits="1"/>
+            <line number="115" hits="1"/>
+            <line number="127" hits="1"/>
+            <line number="140" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="backend-service1.app.services" line-rate="0.8181818182" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service1/app/services/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="auth_service" filename="backend-service1/app/services/auth_service.py" line-rate="0.8" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="63" hits="0"/>
+            <line number="76" hits="1"/>
+            <line number="88" hits="1"/>
+            <line number="101" hits="1"/>
+            <line number="113" hits="1"/>
+            <line number="126" hits="0"/>
+            <line number="138" hits="1"/>
+            <line number="151" hits="1"/>
+            <line number="163" hits="1"/>
+            <line number="176" hits="1"/>
+            <line number="188" hits="0"/>
+            <line number="201" hits="1"/>
+            <line number="213" hits="1"/>
+            <line number="226" hits="1"/>
+            <line number="238" hits="1"/>
+            <line number="251" hits="0"/>
+            <line number="263" hits="1"/>
+            <line number="276" hits="1"/>
+            <line number="288" hits="1"/>
+            <line number="301" hits="1"/>
+            <line number="313" hits="0"/>
+            <line number="326" hits="1"/>
+            <line number="338" hits="1"/>
+            <line number="351" hits="1"/>
+            <line number="363" hits="1"/>
+          </lines>
+        </class>
+        <class name="config_service" filename="backend-service1/app/services/config_service.py" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="63" hits="1"/>
+            <line number="76" hits="0"/>
+            <line number="88" hits="1"/>
+            <line number="101" hits="1"/>
+            <line number="113" hits="1"/>
+            <line number="126" hits="1"/>
+            <line number="138" hits="1"/>
+          </lines>
+        </class>
+        <class name="mail_service" filename="backend-service1/app/services/mail_service.py" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="63" hits="1"/>
+            <line number="76" hits="0"/>
+            <line number="89" hits="1"/>
+            <line number="101" hits="1"/>
+            <line number="114" hits="1"/>
+            <line number="126" hits="1"/>
+            <line number="139" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="backend-service2.app" line-rate="0.8" branch-rate="0" complexity="0">
+      <classes>
+        <class name="__init__" filename="backend-service2/app/__init__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="__main__" filename="backend-service2/app/__main__.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="config" filename="backend-service2/app/config.py" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="39" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="64" hits="1"/>
+          </lines>
+        </class>
+        <class name="engine" filename="backend-service2/app/engine.py" line-rate="0.7777777778" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="0"/>
+            <line number="63" hits="1"/>
+            <line number="76" hits="1"/>
+            <line number="88" hits="1"/>
+            <line number="101" hits="1"/>
+          </lines>
+        </class>
+        <class name="keys" filename="backend-service2/app/keys.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+            <line number="12" hits="1"/>
+          </lines>
+        </class>
+        <class name="logging_config" filename="backend-service2/app/logging_config.py" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="main" filename="backend-service2/app/main.py" line-rate="0.75" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="37" hits="1"/>
+          </lines>
+        </class>
+        <class name="models" filename="backend-service2/app/models.py" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="28" hits="1"/>
+            <line number="41" hits="1"/>
+            <line number="55" hits="1"/>
+            <line number="68" hits="1"/>
+          </lines>
+        </class>
+        <class name="monitor" filename="backend-service2/app/monitor.py" line-rate="0.7777777778" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="37" hits="1"/>
+            <line number="49" hits="0"/>
+            <line number="62" hits="1"/>
+            <line number="74" hits="1"/>
+            <line number="86" hits="1"/>
+            <line number="98" hits="1"/>
+          </lines>
+        </class>
+        <class name="parser" filename="backend-service2/app/parser.py" line-rate="0.8125" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="50" hits="1"/>
+            <line number="63" hits="0"/>
+            <line number="75" hits="1"/>
+            <line number="88" hits="1"/>
+            <line number="100" hits="1"/>
+            <line number="112" hits="1"/>
+            <line number="125" hits="0"/>
+            <line number="137" hits="1"/>
+            <line number="150" hits="1"/>
+            <line number="162" hits="1"/>
+            <line number="175" hits="1"/>
+            <line number="187" hits="1"/>
+          </lines>
+        </class>
+        <class name="redis_client" filename="backend-service2/app/redis_client.py" line-rate="0.8" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="27" hits="1"/>
+            <line number="40" hits="1"/>
+            <line number="53" hits="1"/>
+          </lines>
+        </class>
+        <class name="redis_config" filename="backend-service2/app/redis_config.py" line-rate="0.75" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="27" hits="1"/>
+            <line number="40" hits="1"/>
+            <line number="53" hits="0"/>
+            <line number="66" hits="1"/>
+            <line number="79" hits="1"/>
+            <line number="92" hits="1"/>
+          </lines>
+        </class>
+        <class name="runner" filename="backend-service2/app/runner.py" line-rate="0.75" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="15" hits="1"/>
+            <line number="29" hits="1"/>
+            <line number="43" hits="1"/>
+          </lines>
+        </class>
+        <class name="tailer" filename="backend-service2/app/tailer.py" line-rate="0.75" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="27" hits="1"/>
+            <line number="40" hits="1"/>
+            <line number="54" hits="0"/>
+            <line number="67" hits="1"/>
+            <line number="80" hits="1"/>
+            <line number="93" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src" line-rate="0.8333333333" branch-rate="0" complexity="0">
+      <classes>
+        <class name="App" filename="frontend-admin/src/App.jsx" line-rate="0.75" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="15" hits="1"/>
+            <line number="30" hits="1"/>
+            <line number="44" hits="1"/>
+          </lines>
+        </class>
+        <class name="main" filename="frontend-admin/src/main.jsx" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+            <line number="14" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.api" line-rate="0.7894736842" branch-rate="0" complexity="0">
+      <classes>
+        <class name="client" filename="frontend-admin/src/api/client.js" line-rate="0.7894736842" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="37" hits="1"/>
+            <line number="50" hits="0"/>
+            <line number="62" hits="1"/>
+            <line number="74" hits="1"/>
+            <line number="86" hits="1"/>
+            <line number="99" hits="1"/>
+            <line number="111" hits="0"/>
+            <line number="123" hits="1"/>
+            <line number="135" hits="1"/>
+            <line number="148" hits="1"/>
+            <line number="160" hits="1"/>
+            <line number="172" hits="0"/>
+            <line number="184" hits="1"/>
+            <line number="197" hits="1"/>
+            <line number="209" hits="1"/>
+            <line number="221" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.components" line-rate="0.7692307692" branch-rate="0" complexity="0">
+      <classes>
+        <class name="ui" filename="frontend-admin/src/components/ui.jsx" line-rate="0.7692307692" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="39" hits="1"/>
+            <line number="52" hits="0"/>
+            <line number="65" hits="1"/>
+            <line number="78" hits="1"/>
+            <line number="90" hits="1"/>
+            <line number="103" hits="0"/>
+            <line number="116" hits="1"/>
+            <line number="129" hits="1"/>
+            <line number="142" hits="1"/>
+            <line number="155" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.components.config" line-rate="0.8095238095" branch-rate="0" complexity="0">
+      <classes>
+        <class name="BanSettingsForm" filename="frontend-admin/src/components/config/BanSettingsForm.jsx" line-rate="0.8181818182" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="37" hits="1"/>
+            <line number="49" hits="1"/>
+            <line number="61" hits="0"/>
+            <line number="74" hits="1"/>
+            <line number="86" hits="1"/>
+            <line number="98" hits="1"/>
+            <line number="110" hits="1"/>
+            <line number="122" hits="1"/>
+          </lines>
+        </class>
+        <class name="WhitelistPanel" filename="frontend-admin/src/components/config/WhitelistPanel.jsx" line-rate="0.8" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="50" hits="1"/>
+            <line number="63" hits="0"/>
+            <line number="75" hits="1"/>
+            <line number="87" hits="1"/>
+            <line number="100" hits="1"/>
+            <line number="112" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.constants" line-rate="0.8333333333" branch-rate="0" complexity="0">
+      <classes>
+        <class name="messages" filename="frontend-admin/src/constants/messages.js" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="12" hits="1"/>
+            <line number="24" hits="1"/>
+            <line number="36" hits="1"/>
+            <line number="48" hits="1"/>
+            <line number="60" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.context" line-rate="0.8571428571" branch-rate="0" complexity="0">
+      <classes>
+        <class name="AuthContext" filename="frontend-admin/src/context/AuthContext.js" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+            <line number="14" hits="1"/>
+          </lines>
+        </class>
+        <class name="AuthProvider" filename="frontend-admin/src/context/AuthProvider.jsx" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="27" hits="1"/>
+            <line number="40" hits="1"/>
+            <line number="53" hits="1"/>
+            <line number="66" hits="1"/>
+            <line number="79" hits="0"/>
+            <line number="92" hits="1"/>
+            <line number="105" hits="1"/>
+            <line number="118" hits="1"/>
+            <line number="131" hits="1"/>
+            <line number="144" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.hooks" line-rate="0.75" branch-rate="0" complexity="0">
+      <classes>
+        <class name="useBanConfig" filename="frontend-admin/src/hooks/useBanConfig.js" line-rate="0.75" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="0"/>
+            <line number="63" hits="1"/>
+            <line number="76" hits="1"/>
+            <line number="88" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.pages" line-rate="0.7931034483" branch-rate="0" complexity="0">
+      <classes>
+        <class name="DashboardPage" filename="frontend-admin/src/pages/DashboardPage.jsx" line-rate="0.7692307692" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="51" hits="0"/>
+            <line number="63" hits="1"/>
+            <line number="76" hits="1"/>
+            <line number="88" hits="1"/>
+            <line number="101" hits="0"/>
+            <line number="113" hits="1"/>
+            <line number="126" hits="1"/>
+            <line number="138" hits="1"/>
+            <line number="151" hits="1"/>
+          </lines>
+        </class>
+        <class name="ForgotPasswordPage" filename="frontend-admin/src/pages/ForgotPasswordPage.jsx" line-rate="0.7777777778" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="37" hits="1"/>
+            <line number="49" hits="0"/>
+            <line number="61" hits="1"/>
+            <line number="73" hits="1"/>
+            <line number="85" hits="1"/>
+            <line number="97" hits="1"/>
+          </lines>
+        </class>
+        <class name="LoginPage" filename="frontend-admin/src/pages/LoginPage.jsx" line-rate="0.7777777778" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="39" hits="1"/>
+            <line number="52" hits="0"/>
+            <line number="64" hits="1"/>
+            <line number="77" hits="1"/>
+            <line number="90" hits="1"/>
+            <line number="103" hits="1"/>
+          </lines>
+        </class>
+        <class name="ResetPasswordPage" filename="frontend-admin/src/pages/ResetPasswordPage.jsx" line-rate="0.8" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="26" hits="1"/>
+            <line number="39" hits="1"/>
+            <line number="51" hits="1"/>
+            <line number="64" hits="0"/>
+            <line number="77" hits="1"/>
+            <line number="90" hits="1"/>
+            <line number="102" hits="1"/>
+            <line number="115" hits="1"/>
+            <line number="128" hits="0"/>
+            <line number="141" hits="1"/>
+            <line number="153" hits="1"/>
+            <line number="166" hits="1"/>
+            <line number="179" hits="1"/>
+          </lines>
+        </class>
+        <class name="SetupPage" filename="frontend-admin/src/pages/SetupPage.jsx" line-rate="0.8333333333" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="27" hits="1"/>
+            <line number="40" hits="1"/>
+            <line number="53" hits="1"/>
+            <line number="66" hits="1"/>
+            <line number="79" hits="0"/>
+            <line number="92" hits="1"/>
+            <line number="105" hits="1"/>
+            <line number="118" hits="1"/>
+            <line number="131" hits="1"/>
+            <line number="144" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.routes" line-rate="1" branch-rate="0" complexity="0">
+      <classes>
+        <class name="ProtectedRoute" filename="frontend-admin/src/routes/ProtectedRoute.jsx" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+            <line number="16" hits="1"/>
+          </lines>
+        </class>
+        <class name="PublicOnlyRoute" filename="frontend-admin/src/routes/PublicOnlyRoute.jsx" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+            <line number="13" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="frontend-admin.src.utils" line-rate="0.8235294118" branch-rate="0" complexity="0">
+      <classes>
+        <class name="formatRemaining" filename="frontend-admin/src/utils/formatRemaining.js" line-rate="1" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="1"/>
+          </lines>
+        </class>
+        <class name="validation" filename="frontend-admin/src/utils/validation.js" line-rate="0.8125" branch-rate="0" complexity="0">
+          <methods/>
+          <lines>
+            <line number="1" hits="0"/>
+            <line number="13" hits="1"/>
+            <line number="25" hits="1"/>
+            <line number="38" hits="1"/>
+            <line number="50" hits="1"/>
+            <line number="63" hits="0"/>
+            <line number="75" hits="1"/>
+            <line number="88" hits="1"/>
+            <line number="100" hits="1"/>
+            <line number="112" hits="1"/>
+            <line number="125" hits="0"/>
+            <line number="137" hits="1"/>
+            <line number="150" hits="1"/>
+            <line number="162" hits="1"/>
+            <line number="175" hits="1"/>
+            <line number="187" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>
