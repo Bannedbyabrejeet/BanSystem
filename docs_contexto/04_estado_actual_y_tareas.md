@@ -1,9 +1,9 @@
 # Bannedbyabrejeet: Estado Actual y Tareas Pendientes
 
 > **Última actualización:** 2026-10-28
-> **Rama activa:** `9-issue-7-lector-de-logs-ssh-y-motor-de-seguridad-backend-b`
+> **Rama activa:** `10-issue-8-integración-ufw-bloqueo-automático-y-desbaneo-manual`
 > **Rama de referencia:** `main` — ya incluye el PR #25 (migración a Argon2id, fix de correo y documentación), merge `dc35f40`
-> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa y configuración de baneos/whitelist sobre Redis dockerizado. **Issue #7 (Backend B): lector de logs SSH, parser y motor de seguridad implementados en `backend-service2/`.**
+> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa y configuración de baneos/whitelist sobre Redis dockerizado. **Issues #7 y #8 (Backend B): lector de logs SSH, motor de seguridad, bloqueo/desbloqueo UFW, expiración y worker de desbaneo manual implementados en `backend-service2/`.**
 
 Este documento reemplaza las estimaciones iniciales por el **estado real del repositorio**. Indica qué issues están cerradas, cuáles en curso y qué queda por hacer, con la evidencia correspondiente.
 
@@ -19,16 +19,17 @@ Este documento reemplaza las estimaciones iniciales por el **estado real del rep
 | **#4** | Setup de infraestructura y base de datos (Redis) | ✅ Completada | `docker-compose.yml`, `redis/redis.conf`, `scripts/verify_redis.sh`, `docs/DOCKER_REDIS.md` |
 | **#5** | Autenticación de administrador | ✅ Completada | `backend-service1/`, `frontend-admin/`, `README.md` |
 | **#6** | Parámetros de baneo, findtime y whitelist (API + vista) | ✅ Completada | `app/api/v1/endpoints/config.py`, `app/services/config_service.py`, `tests/test_config_api.py`, `frontend-admin/src/components/config/` |
-| **#7** | Servicio 2: lector de logs SSH y motor de seguridad (Backend B) | ✅ Completada (sin UFW) | `backend-service2/`, `tests/`, `docs/evidencias/issue-07-backend-b.md` |
-| **#8** | Integración UFW, consumo del stream de desbaneo y visor de logs | ⏳ Pendiente | — |
+| **#7** | Servicio 2: lector de logs SSH y motor de seguridad (Backend B) | ✅ Completada | `backend-service2/`, `tests/`, `docs/evidencias/issue-07-backend-b.md` |
+| **#8** | Integración UFW, expiración y desbaneo manual (Backend B) | ✅ Completada (visor Vue pendiente) | `backend-service2/app/ufw.py`, `bans.py`, `unban_worker.py`, `docs/evidencias/issue-08-ufw.md` |
 | **#24** | Migración de bcrypt a Argon2id | ✅ Completada | `backend-service1/app/core/security.py` |
 
 **Leyenda:** ✅ Cerrada · 🚧 En curso · ⏳ Pendiente
 
 > La API del Servicio 1 para IPs baneadas, historial y desbaneo manual
-> (`/api/v1/banned-ips/`, merge `df10bbf`) ya está en `main`; en esta rama se
-> implementa el **Backend B** (lector/parser SSH y motor), que es el alcance
-> pedido para la Issue #7.
+> (`/api/v1/banned-ips/`, merge `df10bbf`) ya está en `main`. La Issue #8
+> completa el **Backend B**: ejecución de UFW, expiración automática y
+> consumo del stream `security:events:unban`. El visor de logs del Frontend B
+> (Vue) sigue fuera de esta entrega.
 
 ---
 
@@ -117,8 +118,8 @@ En el Frontend A, los componentes `BanSettingsForm` y `WhitelistPanel` viven en 
 
 ### 2.7 Pruebas
 
-- **85 tests** en `backend-service1/tests/` (seguridad, autenticación y configuración).
-- Si no se define `TEST_REDIS_URL`, se ejecutan 18 y se omiten 67 (las que necesitan Redis).
+- **88 tests** en `backend-service1/tests/` (seguridad, autenticación, configuración y baneos).
+- Si no se define `TEST_REDIS_URL`, se ejecutan 18 y se omiten 70 (las que necesitan Redis).
 - Requieren un **Redis aparte del de desarrollo** (por ejemplo `redis://127.0.0.1:6399/15`), porque hacen `FLUSHDB`.
 
 ### 2.8 Lector de logs SSH y motor de seguridad — Issue #7 (Backend B)
@@ -136,12 +137,30 @@ Implementado en `backend-service2/` (Python + Flask para el healthcheck):
   cada evento; ignora éxitos, IPs en whitelist (IP exacta o CIDR) e IPs ya
   baneadas; mantiene `failed:<IP>` como ZSET con limpieza por `findtime`,
   transacción `MULTI/EXEC` y TTL renovado. Devuelve `ban_required` al alcanzar
-  `maxretry`, **sin ejecutar UFW**.
+  `maxretry`.
 - **Monitoreo y consola** (`app/monitor.py`): imprime el contador `n/maxretry`
   y la ventana en segundos; `python -m app` inicia el proceso continuo.
-- **Pruebas:** 53 tests con `fakeredis` (parser, tail, Redis, whitelist,
-  contador, reset por `findtime`, healthcheck). Evidencia en
-  `docs/evidencias/issue-07-backend-b.md`.
+- **Pruebas:** 53 tests originales de la Issue #7 con `fakeredis` (parser,
+  tail, Redis, whitelist, contador, reset por `findtime`, healthcheck).
+  Evidencia en `docs/evidencias/issue-07-backend-b.md`.
+
+### 2.9 Integración UFW, expiración y desbaneo manual — Issue #8 (Backend B)
+
+- **Ejecutor UFW** (`app/ufw.py`): construye `ufw deny from <IP> to any port
+  22` y `ufw delete deny from <IP> to any port 22`, valida la IP con
+  `ipaddress`, usa `subprocess` sin shell y soporta `UFW_DRY_RUN`.
+- **Ciclo de vida** (`app/bans.py`): al banear escribe `ips:banned`,
+  `bans:expirations` (ZSET por `expires_at`) e `ips:history`; borra
+  `failed:<IP>`. Si Redis falla tras aplicar UFW, revierte la regla.
+- **Expiración (US-05):** cada `BAN_MAINTENANCE_INTERVAL` segundos se leen
+  los vencidos con `ZRANGEBYSCORE`, se elimina la regla UFW y la IP pasa al
+  historial con `unban_reason="timeout"`.
+- **Desbaneo manual (US-07):** `app/unban_worker.py` consume
+  `security:events:unban` (grupo `ufw_workers`), ejecuta el desbloqueo,
+  limpia `bans:expirations` y confirma con `XACK`; los fallos de UFW se
+  reintentan con `XAUTOCLAIM`.
+- **Pruebas:** 79 tests en total con `fakeredis` y un ejecutor UFW falso.
+  Evidencia en `docs/evidencias/issue-08-ufw.md`.
 
 ---
 
@@ -164,10 +183,15 @@ Implementado en `backend-service2/` (Python + Flask para el healthcheck):
 
 ### Issue #8 — UFW, desbaneo y visor de logs
 
-- Bloqueo/desbloqueo con **UFW** a partir de la decisión `ban_required` del
+- ✅ Bloqueo/desbloqueo con **UFW** a partir de la decisión `ban_required` del
   motor y de la orden manual.
-- Broker de desbaneo `security:events:unban` (contrato en `docs/contrato-desbaneo.yaml`).
-- Frontend B (Vue) con el visor de logs formateado y el control de desbaneo manual.
+- ✅ Broker de desbaneo `security:events:unban` consumido por el Servicio 2
+  (`app/unban_worker.py`).
+- ✅ Expiración automática con `bans:expirations` y worker periódico.
+- ⏳ Frontend B (Vue) con el visor de logs formateado y el control de desbaneo
+  manual.
+- La ejecución real de UFW requiere root o `sudo` sin contraseña; en
+  desarrollo se puede usar `UFW_DRY_RUN=true`.
 
 ### Otros pendientes menores
 
@@ -197,8 +221,8 @@ Implementado en `backend-service2/` (Python + Flask para el healthcheck):
 |----|-------|--------|--------------|
 | **BACK2-01** | Lector y Parser de Logs SSH | ✅ Completada | Issue #3 (ruta configurable) |
 | **BACK2-02** | Motor de Reglas y Evaluación | ✅ Completada | Issue #3, #5, #6 |
-| **BACK2-03** | Módulo de Bloqueo Automático (UFW) | ⏳ Pendiente | Issue #3 |
-| **BACK2-04** | Módulo de Desbaneo Manual (UFW) | ⏳ Pendiente | Issue #2, #7 |
+| **BACK2-03** | Módulo de Bloqueo Automático (UFW) | ✅ Completada | Issue #3 |
+| **BACK2-04** | Módulo de Desbaneo Manual (UFW) | ✅ Completada | Issue #2, #7 |
 | **FRONT-04** | Visor de Logs SSH Formateado | ⏳ Pendiente | BACK2-01 |
 | **FRONT-05** | Control de Desbaneo Manual | ⏳ Pendiente | BACK2-04 |
 
@@ -224,7 +248,7 @@ curl -s http://localhost:8000/api/v1/auth/status   # -> {"initialized":true}
 
 # 3. Tests del backend (Redis aparte requerido)
 cd backend-service1
-TEST_REDIS_URL="redis://127.0.0.1:6399/15" PYTHONPATH=.pylibs python -m pytest -q    # -> 85 passed
+TEST_REDIS_URL="redis://127.0.0.1:6399/15" PYTHONPATH=.pylibs python -m pytest -q    # -> 88 passed
 
 # 4. Configuración persistida (tras guardar en el dashboard)
 docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning \
@@ -233,13 +257,18 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
   SMEMBERS config:whitelist
 
 # 5. Tests del Servicio 2 (no necesitan Redis real)
-cd backend-service2
-PYTHONPATH=../backend-service1/.pylibs python -m pytest -q            # -> 53 passed
+cd ../backend-service2
+PYTHONPATH=../backend-service1/.pylibs python -m pytest -q            # -> 79 passed
 PYTHONPATH=../backend-service1/.pylibs python scripts/demo_engine.py  # contador y reset
+PYTHONPATH=../backend-service1/.pylibs python scripts/demo_ufw.py     # UFW simulado
 
-# 6. Motor continuo (en otra terminal)
-SSH_LOG_PATH=/tmp/auth.log LOG_READ_FROM_START=true \
+# 6. Motor continuo (en otra terminal; sin privilegios UFW usar UFW_DRY_RUN=true)
+SSH_LOG_PATH=/tmp/auth.log LOG_READ_FROM_START=true UFW_DRY_RUN=true \
   PYTHONPATH=../backend-service1/.pylibs python -m app
+
+# 7. Evidencia UFW real (host con sudo sin contraseña)
+cd backend-service2
+PYTHONPATH=../backend-service1/.pylibs python scripts/demo_ufw.py --real
 ```
 
 El hash almacenado debe comenzar por `$argon2id$`:
@@ -255,8 +284,9 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
 
 - Únicamente **Redis está dockerizado**; el backend (uvicorn), el motor del Servicio 2 (`python -m app`) y el Frontend A (Vite) corren en la máquina.
 - El puerto **6379 del host debe quedar libre** para el contenedor. Si un Redis del sistema (por ejemplo el de `ntopng`) lo ocupa, el contenedor no podrá publicar el puerto; deténgalo (`sudo systemctl stop redis-server`) o mueva el proyecto a otro puerto.
-- `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP. El Servicio 2 agrega `SSH_LOG_PATH`, `LOG_READ_FROM_START` y `LOG_POLL_INTERVAL`.
-- La rama de la Issue #7 (Backend B) parte de `main` actualizado. Antes de abrir el PR, verificar que la rama esté sincronizada con `origin/main`.
+- `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP. El Servicio 2 agrega `SSH_LOG_PATH`, `LOG_READ_FROM_START`, `LOG_POLL_INTERVAL` y las variables `UFW_*` / `UNBAN_*`.
+- La rama de la Issue #8 (Backend B) parte de `main` actualizado. Antes de abrir el PR, verificar que la rama esté sincronizada con `origin/main`.
+- La ejecución real de UFW requiere root o `sudo` sin contraseña. En desarrollo, `UFW_DRY_RUN=true` permite ejecutar el motor completo sin privilegios.
 
 ---
 

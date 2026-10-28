@@ -1,8 +1,9 @@
 """Agregador de rutas de la versión 1 de la API.
 
-Expone autenticación y configuración de baneos/whitelist. Los módulos de
-IPs baneadas e historial (issue #7) se incorporarán bajo ``/banned-ips``
-e ``/history``.
+Expone autenticación, configuración de baneos/whitelist, IPs baneadas e
+historial (Issue #7). El desbaneo manual de ``/banned-ips/{ip}`` publica en
+``security:events:unban`` para que el Servicio 2 retire la regla de UFW
+(Issue #8).
 """
 
 from fastapi import APIRouter

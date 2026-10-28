@@ -88,6 +88,11 @@ reinicia el contador cuando los intentos quedan fuera de la ventana.
 ## 6. Decisión al alcanzar el umbral
 
 El motor devuelve `EngineAction.BAN_REQUIRED` y registra en consola una
-advertencia. **No ejecuta UFW** ni escribe `ips:banned`, porque esa orden de
-firewall pertenece a la siguiente etapa (`BACK2-03`/`BACK2-04`). De este modo
-la decisión queda desacoplada y es testeable sin privilegios de root.
+advertencia. En esta entrega **no ejecuta UFW** ni escribe `ips:banned`,
+porque esa orden de firewall pertenece a la siguiente etapa
+(`BACK2-03`/`BACK2-04`). De este modo la decisión queda desacoplada y es
+testeable sin privilegios de root.
+
+> **Continuación:** la Issue #8 conecta esta decisión con
+> `backend-service2/app/bans.py` y `app/ufw.py`. Ver
+> [`issue-08-ufw.md`](issue-08-ufw.md).
