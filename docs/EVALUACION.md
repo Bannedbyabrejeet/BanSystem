@@ -3,7 +3,7 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-10-28.
+> Generado: 2026-10-29.
 
 ## 1. Veredicto
 
@@ -19,15 +19,13 @@
 | Cobertura de líneas | 67.6% (mínimo 80%) |
 | Capas detectadas | vistas, servicios, estado |
 
-> **Qué no se consideró:** el repositorio publica un informe de cobertura que **no se aceptó** como medición (coverage.xml: el propio archivo se declara sintético ('synthetic')). Esos valores no se usan: el número de arriba sale de **ejecutar la suite** tal como está en el repositorio. Un artefacto de cobertura sirve cuando lo genera un runner sobre el mismo código; si declara líneas que el runner no puede ejecutar, no es una medición.
-
 > **Aprobado** exige cumplir **todos** los criterios del semáforo. No es una nota: sirve para ordenar y priorizar la revisión.
 
 ## 2. Autoría (RepoSense)
 
 | Autor | Commits | Código (LOC) | Tests (LOC) | Docs (LOC) | Días activos | % del código |
 |---|---:|---:|---:|---:|---:|---:|
-| SantiMulet | 13 | 4,188 | 804 | 2,287 | 10 | 100% |
+| SantiMulet | 19 | 7,048 | 1,797 | 2,821 | 11 | 100% |
 | manu_abrego_1913 | 5 | 0 | 0 | 253 | 5 | 0% |
 
 > _El LOC de autoría lo calcula RepoSense sobre el historial y puede diferir del LOC de código del análisis de calidad (que mira solo el estado de `main`)._
@@ -40,8 +38,8 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| SantiMulet | 8 | 37% | 23 d | 50% | **31** | No aprueba | Cumplimiento 37% (mín. 50%); Pausa 23 d (máx. 10 d) |
-| manu_abrego_1913 | 3 | 14% | 61 d | 50% | **16** | No aprueba | Cumplimiento 14% (mín. 50%); Pausa 61 d (máx. 10 d) |
+| SantiMulet | 9 | 41% | 23 d | 93% | **40** | No aprueba | Cumplimiento 41% (mín. 50%); Pausa 23 d (máx. 10 d) |
+| manu_abrego_1913 | 4 | 18% | 61 d | 93% | **25** | No aprueba | Cumplimiento 18% (mín. 50%); Pausa 61 d (máx. 10 d) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -160,7 +158,6 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 - **Qué mide:** Porcentaje de líneas de código ejecutadas por la suite de tests (cobertura real, no cantidad de archivos de test).
 - **Por qué importa:** Un test que existe pero no ejecuta el código no protege de nada: la cobertura muestra qué partes quedan sin verificar.
 - **Tu resultado:** **67.6%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.0%, backend-service2 84.4%) _(mínimo 80% de líneas)_
-- **Qué no se consideró:** el informe de cobertura publicado en el repositorio no se aceptó (coverage.xml: el propio archivo se declara sintético ('synthetic')).
 - **Para investigar la causa:**
     - ¿Qué módulos o ramas del sistema nunca se ejecutan en los tests?
     - ¿Los tests prueban el camino principal y los errores, o solo el caso feliz?
