@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # ------------------------------------------------------------------
+    # JWT compartido con el Servicio 1 (Frontend B consume telemetría)
+    # ------------------------------------------------------------------
+    jwt_secret: SecretStr = SecretStr("dev-only-insecure-secret-change-me-32")
+    jwt_algorithm: str = "HS256"
+    jwt_issuer: str = "bannedbyabrejeet:service1"
+    jwt_audience: str = "bannedbyabrejeet:admin-console"
+
+    # ------------------------------------------------------------------
     # Redis (mismas claves que escribe el Servicio 1)
     # ------------------------------------------------------------------
     redis_host: str = "127.0.0.1"
@@ -52,6 +60,8 @@ class Settings(BaseSettings):
     #: Espera entre sondeos del archivo cuando no hay líneas nuevas.
     log_poll_interval: float = Field(default=0.5, gt=0, le=60)
     log_encoding: str = "utf-8"
+    #: Cantidad máxima de eventos SSH retenidos en Redis para el visor.
+    ssh_events_limit: int = Field(default=2_000, ge=100, le=50_000)
 
     # ------------------------------------------------------------------
     # UFW (Issue #8)

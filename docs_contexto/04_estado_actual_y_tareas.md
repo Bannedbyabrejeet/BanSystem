@@ -1,9 +1,9 @@
 # Bannedbyabrejeet: Estado Actual y Tareas Pendientes
 
-> **Última actualización:** 2026-10-28
-> **Rama activa:** `10-issue-8-integración-ufw-bloqueo-automático-y-desbaneo-manual`
-> **Rama de referencia:** `main` — ya incluye el PR #25 (migración a Argon2id, fix de correo y documentación), merge `dc35f40`
-> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React), con autenticación de administrador completa y configuración de baneos/whitelist sobre Redis dockerizado. **Issues #7 y #8 (Backend B): lector de logs SSH, motor de seguridad, bloqueo/desbloqueo UFW, expiración y worker de desbaneo manual implementados en `backend-service2/`.**
+> **Última actualización:** 2026-10-30
+> **Rama activa:** `11-issue-9-visor-formateado-de-logs-ssh-y-estado-de-ips-frontend-b`
+> **Rama de referencia:** `main` — incluye las Issues #1 a #8 y #24 mergeadas
+> **Entregado hasta ahora:** Servicio 1 (FastAPI) + Frontend A (React) + Servicio 2 (Flask/motor/UFW) + Frontend B (Vue). **La Issue #9 agrega el visor de logs SSH, el estado de IPs y el desbaneo manual en `frontend-ops/`, con la API `/telemetry` del Servicio 2.**
 
 Este documento reemplaza las estimaciones iniciales por el **estado real del repositorio**. Indica qué issues están cerradas, cuáles en curso y qué queda por hacer, con la evidencia correspondiente.
 
@@ -20,16 +20,16 @@ Este documento reemplaza las estimaciones iniciales por el **estado real del rep
 | **#5** | Autenticación de administrador | ✅ Completada | `backend-service1/`, `frontend-admin/`, `README.md` |
 | **#6** | Parámetros de baneo, findtime y whitelist (API + vista) | ✅ Completada | `app/api/v1/endpoints/config.py`, `app/services/config_service.py`, `tests/test_config_api.py`, `frontend-admin/src/components/config/` |
 | **#7** | Servicio 2: lector de logs SSH y motor de seguridad (Backend B) | ✅ Completada | `backend-service2/`, `tests/`, `docs/evidencias/issue-07-backend-b.md` |
-| **#8** | Integración UFW, expiración y desbaneo manual (Backend B) | ✅ Completada (visor Vue pendiente) | `backend-service2/app/ufw.py`, `bans.py`, `unban_worker.py`, `docs/evidencias/issue-08-ufw.md` |
+| **#8** | Integración UFW, expiración y desbaneo manual (Backend B) | ✅ Completada | `backend-service2/app/ufw.py`, `bans.py`, `unban_worker.py`, `docs/evidencias/issue-08-ufw.md` |
+| **#9** | Visor de logs SSH y estado de IPs (Frontend B) | ✅ Completada | `frontend-ops/`, `backend-service2/app/api.py`, `telemetry.py`, `docs/evidencias/issue-09-frontend-b.md` |
 | **#24** | Migración de bcrypt a Argon2id | ✅ Completada | `backend-service1/app/core/security.py` |
 
 **Leyenda:** ✅ Cerrada · 🚧 En curso · ⏳ Pendiente
 
 > La API del Servicio 1 para IPs baneadas, historial y desbaneo manual
 > (`/api/v1/banned-ips/`, merge `df10bbf`) ya está en `main`. La Issue #8
-> completa el **Backend B**: ejecución de UFW, expiración automática y
-> consumo del stream `security:events:unban`. El visor de logs del Frontend B
-> (Vue) sigue fuera de esta entrega.
+> completó el **Backend B** (UFW, expiración y stream de desbaneo) y la Issue
+> #9 agregó la consola operativa Vue con logs, estado de IPs e historial.
 
 ---
 
@@ -159,8 +159,29 @@ Implementado en `backend-service2/` (Python + Flask para el healthcheck):
   `security:events:unban` (grupo `ufw_workers`), ejecuta el desbloqueo,
   limpia `bans:expirations` y confirma con `XACK`; los fallos de UFW se
   reintentan con `XAUTOCLAIM`.
-- **Pruebas:** 79 tests en total con `fakeredis` y un ejecutor UFW falso.
-  Evidencia en `docs/evidencias/issue-08-ufw.md`.
+- **Pruebas:** 79 tests de las Issues #7-#8 con `fakeredis` y un ejecutor UFW
+  falso. Evidencia en `docs/evidencias/issue-08-ufw.md`.
+
+### 2.10 Frontend B: visor de logs y estado de IPs — Issue #9
+
+- **Nuevo frontend Vue 3** en `frontend-ops/`, servido bajo `/logs/` y con
+  rutas `/logs/` (logs) y `/logs/bans` (IPs e historial).
+- **US-03 / FRONT-04:** tabla con fecha/hora, IP, usuario, resultado, tipo y
+  puerto; filas verdes para éxitos y rojas para fallos; filtros por resultado,
+  IP y usuario; actualización automática cada 5 s.
+- **US-06:** pestañas “Baneadas en el momento” e “Historial de baneadas
+  anteriormente”, con vencimiento, tiempo restante, duración y motivo.
+- **US-07 / FRONT-05:** botón **Desbanear** con confirmación; llama a
+  `DELETE /telemetry/bans/<ip>` y el worker de la Issue #8 elimina UFW y el
+  timeout.
+- **Backend de telemetría:** `app/telemetry.py` persiste eventos en
+  `ssh:events`; `app/api.py` expone `/telemetry/logs`, `/telemetry/bans`,
+  `/telemetry/history` y `/telemetry/bans/<ip>`; `app/auth.py` valida el JWT
+  del Servicio 1 y `session_version`.
+- **Integración same-origin:** el `vite.config.js` del Frontend A redirige
+  `/logs` a `3001` y `/telemetry` a `5000`, compartiendo `sessionStorage`.
+- **Pruebas:** 93 tests en el Servicio 2; `frontend-ops` pasa `npm run lint`
+  y `npm run build`. Capturas en `docs/evidencias/issue-09-frontend-b.md`.
 
 ---
 
@@ -176,10 +197,10 @@ Implementado en `backend-service2/` (Python + Flask para el healthcheck):
 
 - La API (`GET/POST /banned-ips/`, `DELETE /banned-ips/{ip}`, historial) ya
   está en `main` (merge `df10bbf`).
-- Falta la vista del Frontend A con clasificación "Baneadas en el momento" /
-  "Historial".
-- El motor del Servicio 2 ya consulta `ips:banned` (solo lectura) para no
-  acumular intentos de una IP sancionada.
+- La consola operativa del Frontend B ya cubre la clasificación “Baneadas en
+  el momento” / “Historial” y el desbaneo manual (Issue #9).
+- Queda pendiente, si se desea, una vista integrada equivalente dentro del
+  dashboard React del Frontend A.
 
 ### Issue #8 — UFW, desbaneo y visor de logs
 
@@ -188,14 +209,16 @@ Implementado en `backend-service2/` (Python + Flask para el healthcheck):
 - ✅ Broker de desbaneo `security:events:unban` consumido por el Servicio 2
   (`app/unban_worker.py`).
 - ✅ Expiración automática con `bans:expirations` y worker periódico.
-- ⏳ Frontend B (Vue) con el visor de logs formateado y el control de desbaneo
-  manual.
+- ✅ Visor de logs y control de desbaneo en el Frontend B (Issue #9).
 - La ejecución real de UFW requiere root o `sudo` sin contraseña; en
   desarrollo se puede usar `UFW_DRY_RUN=true`.
 
 ### Otros pendientes menores
 
-- **Frontend B (Vue):** aún no iniciado.
+- **Frontend A:** vista integrada de IPs baneadas/historial (la consola
+  operativa de la Issue #9 ya lo cubre del lado Vue).
+- **Despliegue:** proxy inverso Nginx para publicar ambos frontends bajo el
+  mismo origen (`/` para React y `/logs/` para Vue) según el ADR 001.
 
 > Nota: el TTL estricto de tokens (US-10) **ya está implementado** con `SETEX` en la Issue #5.
 
@@ -223,8 +246,8 @@ Implementado en `backend-service2/` (Python + Flask para el healthcheck):
 | **BACK2-02** | Motor de Reglas y Evaluación | ✅ Completada | Issue #3, #5, #6 |
 | **BACK2-03** | Módulo de Bloqueo Automático (UFW) | ✅ Completada | Issue #3 |
 | **BACK2-04** | Módulo de Desbaneo Manual (UFW) | ✅ Completada | Issue #2, #7 |
-| **FRONT-04** | Visor de Logs SSH Formateado | ⏳ Pendiente | BACK2-01 |
-| **FRONT-05** | Control de Desbaneo Manual | ⏳ Pendiente | BACK2-04 |
+| **FRONT-04** | Visor de Logs SSH Formateado | ✅ Completada | BACK2-01 |
+| **FRONT-05** | Control de Desbaneo Manual | ✅ Completada | BACK2-04 |
 
 ---
 
@@ -258,16 +281,20 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
 
 # 5. Tests del Servicio 2 (no necesitan Redis real)
 cd ../backend-service2
-PYTHONPATH=../backend-service1/.pylibs python -m pytest -q            # -> 79 passed
+PYTHONPATH=../backend-service1/.pylibs python -m pytest -q            # -> 93 passed
 PYTHONPATH=../backend-service1/.pylibs python scripts/demo_engine.py  # contador y reset
 PYTHONPATH=../backend-service1/.pylibs python scripts/demo_ufw.py     # UFW simulado
 
-# 6. Motor continuo (en otra terminal; sin privilegios UFW usar UFW_DRY_RUN=true)
+# 6. Frontend B (Vue)
+cd ../frontend-ops
+npm ci && npm run lint && npm run build
+
+# 7. Motor continuo (en otra terminal; sin privilegios UFW usar UFW_DRY_RUN=true)
 SSH_LOG_PATH=/tmp/auth.log LOG_READ_FROM_START=true UFW_DRY_RUN=true \
   PYTHONPATH=../backend-service1/.pylibs python -m app
 
-# 7. Evidencia UFW real (host con sudo sin contraseña)
-cd backend-service2
+# 8. Evidencia UFW real (host con sudo sin contraseña)
+cd ../backend-service2
 PYTHONPATH=../backend-service1/.pylibs python scripts/demo_ufw.py --real
 ```
 
@@ -282,10 +309,10 @@ docker exec bannedbyabrejeet_redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warn
 
 ## 7. Estado de la infraestructura local
 
-- Únicamente **Redis está dockerizado**; el backend (uvicorn), el motor del Servicio 2 (`python -m app`) y el Frontend A (Vite) corren en la máquina.
+- Únicamente **Redis está dockerizado**; el backend (uvicorn), el motor del Servicio 2 (`python -m app`), el Flask de telemetría y los dos frontends (Vite) corren en la máquina.
 - El puerto **6379 del host debe quedar libre** para el contenedor. Si un Redis del sistema (por ejemplo el de `ntopng`) lo ocupa, el contenedor no podrá publicar el puerto; deténgalo (`sudo systemctl stop redis-server`) o mueva el proyecto a otro puerto.
-- `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP. El Servicio 2 agrega `SSH_LOG_PATH`, `LOG_READ_FROM_START`, `LOG_POLL_INTERVAL` y las variables `UFW_*` / `UNBAN_*`.
-- La rama de la Issue #8 (Backend B) parte de `main` actualizado. Antes de abrir el PR, verificar que la rama esté sincronizada con `origin/main`.
+- `.env` (raíz, ignorado por git) contiene los secretos reales: `REDIS_PASSWORD`, `JWT_SECRET` y, opcionalmente, las credenciales SMTP. El Servicio 2 agrega `SSH_LOG_PATH`, `LOG_READ_FROM_START`, `LOG_POLL_INTERVAL`, `SSH_EVENTS_LIMIT` y las variables `UFW_*` / `UNBAN_*`.
+- La rama de la Issue #9 parte de `main` con la Issue #8 mergeada. Antes de abrir el PR, verificar que la rama esté sincronizada con `origin/main`.
 - La ejecución real de UFW requiere root o `sudo` sin contraseña. En desarrollo, `UFW_DRY_RUN=true` permite ejecutar el motor completo sin privilegios.
 
 ---

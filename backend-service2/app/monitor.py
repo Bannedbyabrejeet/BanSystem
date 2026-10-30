@@ -12,6 +12,7 @@ from app.engine import SecurityEngine
 from app.models import EngineAction, EngineDecision, SSHEvent
 from app.parser import SSHParser
 from app.tailer import LogTailer
+from app.telemetry import TelemetryStore
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class LogMonitor:
         poll_interval: float = 0.5,
         ban_service: BanService | None = None,
         maintenance_interval: float = 5.0,
+        event_store: TelemetryStore | None = None,
     ) -> None:
         self.tailer = tailer
         self.parser = parser
@@ -35,6 +37,7 @@ class LogMonitor:
         self.poll_interval = poll_interval
         self.ban_service = ban_service
         self.maintenance_interval = maintenance_interval
+        self.event_store = event_store or TelemetryStore(engine.redis)
         self._last_maintenance = 0.0
 
     # ------------------------------------------------------------------
@@ -47,6 +50,7 @@ class LogMonitor:
             event = self.parser.parse(line)
             if event is None:
                 continue
+            self._record_event(event)
             decision = self.engine.process(event)
             self._log(event, decision)
             self._apply_ban(decision)
@@ -75,11 +79,26 @@ class LogMonitor:
             event = self.parser.parse(line)
             if event is None:
                 continue
+            self._record_event(event)
             decision = self.engine.process(event)
             self._log(event, decision)
             self._apply_ban(decision)
             decisions.append(decision)
         return decisions
+
+    # ------------------------------------------------------------------
+    # Telemetría (Issue #9)
+    # ------------------------------------------------------------------
+    def _record_event(self, event: SSHEvent) -> None:
+        """Persiste el evento para el visor del Frontend B.
+
+        Un fallo de Redis no debe interrumpir el motor de seguridad: el
+        evento se pierde solo para la vista, no para el conteo.
+        """
+        try:
+            self.event_store.record_event(event)
+        except Exception:  # Redis caído o respuesta inesperada
+            logger.exception("No se pudo guardar el evento SSH en Redis")
 
     # ------------------------------------------------------------------
     # UFW y expiración

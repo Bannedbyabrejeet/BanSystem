@@ -8,24 +8,25 @@ Detalle completo en [`docs/EVALUACION.md`](docs/EVALUACION.md).
 # BannedbyAbrejeet — Baneo SSH, UFW, whitelist y administración web
 
 Implementación de Backend A (FastAPI + Redis), Backend B (motor de seguridad,
-lector de logs SSH e integración UFW) y Frontend A (React + React Router v6)
-para el setup único, login, sesión JWT, recuperación de contraseña,
-configuración de baneos y ciclo de vida de las sanciones, sobre Redis
-dockerizado. Cubre las issues **#4** (infraestructura), **#5**
-(autenticación), **#6** (parámetros de baneo, ventana de tolerancia y
-whitelist), **#7 Backend B** (lector/parser SSH y motor de seguridad), **#8**
-(bloqueo/desbaneo UFW y expiración) y **#24** (migración de hash a Argon2id).
-No incluye el visor de logs del Frontend B.
+lector de logs SSH, integración UFW y API de telemetría), Frontend A (React +
+React Router v6) y Frontend B (Vue 3) para el setup único, login, sesión JWT,
+recuperación de contraseña, configuración de baneos, ciclo de vida de las
+sanciones y consola operativa, sobre Redis dockerizado. Cubre las issues
+**#4** (infraestructura), **#5** (autenticación), **#6** (parámetros de baneo,
+ventana de tolerancia y whitelist), **#7 Backend B** (lector/parser SSH y motor
+de seguridad), **#8** (bloqueo/desbaneo UFW y expiración), **#9** (visor de logs
+y estado de IPs en Vue) y **#24** (migración de hash a Argon2id).
 
 ## Estado del proyecto
 
 Esta entrega corresponde a las **issues #5 (autenticación)**, **#6
 (configuración de baneos)**, **#7 Backend B (lector de logs SSH y motor de
-seguridad)**, **#8 (integración UFW, expiración y desbaneo manual)** y **#24
-(Argon2id)**. Cubre el Servicio 1 (FastAPI), el motor del Servicio 2
-(Python/Flask), el Frontend A (React) y los workers de firewall; **no**
-incluye el visor de logs del Frontend B (Vue) ni la vista de IPs baneadas en
-el Frontend A.
+seguridad)**, **#8 (integración UFW, expiración y desbaneo manual)**, **#9
+(consola operativa Vue con logs, IPs e historial)** y **#24 (Argon2id)**.
+Cubre el Servicio 1 (FastAPI), el motor del Servicio 2 (Python/Flask), el
+Frontend A (React), el Frontend B (Vue) y los workers de firewall. Queda
+pendiente, si se desea, replicar la vista de IPs dentro del dashboard React y
+publicar ambos frontends bajo el mismo origen con Nginx.
 
 ### Implementado
 
@@ -34,16 +35,17 @@ el Frontend A.
 - **Configuración (Issue #6 / US-02, US-08, US-09):** endpoints y formulario del dashboard para `maxretry`, `bantime` y `findtime`, más alta/baja de IPs y subredes de la lista blanca. Las IPs locales `127.0.0.1` y `::1` siempre están presentes y no pueden eliminarse (`409`).
 - **Motor de seguridad (Issue #7 Backend B / BACK2-01, BACK2-02):** lector continuo de `auth.log` con rotación/truncado, parser de fallos y éxitos SSH, lectura dinámica de la configuración Redis, whitelist exacta/CIDR y contador deslizante `failed:<IP>` con `findtime` y `maxretry`.
 - **Integración UFW (Issue #8 / BACK2-03, BACK2-04):** al alcanzar el umbral se ejecuta `ufw deny from <IP> to any port 22` y se registra la sanción en `ips:banned` + `ips:history`. El ZSET `bans:expirations` permite que un worker elimine la regla automáticamente al vencer `bantime` (US-05). Las órdenes manuales del dashboard llegan por el stream `security:events:unban`, se ejecutan con `ufw delete deny ...` y se confirman con `XACK` (US-07). Evidencia en [`docs/evidencias/issue-08-ufw.md`](docs/evidencias/issue-08-ufw.md).
+- **Consola operativa (Issue #9 / FRONT-04, FRONT-05):** Frontend B en **Vue 3** (`frontend-ops/`) con visor de logs SSH, filtros por resultado/IP/usuario, clasificación de IPs en “Baneadas en el momento” e “Historial de baneadas anteriormente”, y botón **Desbanear**. El Servicio 2 expone `/telemetry/logs`, `/telemetry/bans`, `/telemetry/history` y `DELETE /telemetry/bans/<ip>`, y persiste los eventos en `ssh:events`. Evidencia en [`docs/evidencias/issue-09-frontend-b.md`](docs/evidencias/issue-09-frontend-b.md).
 - **Hash de contraseñas (Issue #24):** Argon2id mediante `argon2-cffi`, en sustitución de bcrypt.
 - **Correo:** envío real por SMTP (probado con Gmail) o modo `log` para desarrollo.
 - **Frontend A:** vistas de setup, login, "olvidé mi contraseña", restablecer contraseña y dashboard con los paneles de configuración y whitelist.
 - **Decisiones y contratos:** [ADR 001](docs/ADR001-UnificacionMultifrontend.md) (estrategia multi-framework) y [contrato de desbaneo](docs/contrato-desbaneo.yaml).
-- **Documentación técnica:** [índice de `docs/`](docs/README.md), [esquema de claves Redis](docs/REDIS_SCHEMA.md), [evidencia del motor SSH](docs/evidencias/issue-07-backend-b.md) y [estado del proyecto por issue](docs_contexto/04_estado_actual_y_tareas.md).
+- **Documentación técnica:** [índice de `docs/`](docs/README.md), [esquema de claves Redis](docs/REDIS_SCHEMA.md), [evidencia del motor SSH](docs/evidencias/issue-07-backend-b.md), [evidencia de UFW](docs/evidencias/issue-08-ufw.md), [evidencia del Frontend B](docs/evidencias/issue-09-frontend-b.md) y [estado del proyecto por issue](docs_contexto/04_estado_actual_y_tareas.md).
 
 ### Pendiente
 
-- **Issue #7 (Servicio 1):** vista del Frontend A para IPs baneadas e historial; la API ya existe.
-- **Issue #8:** visor de logs en el Frontend B (Vue). El backend de UFW, expiración y desbaneo manual ya está implementado.
+- **Vista integrada en el Frontend A:** IPs baneadas e historial dentro del dashboard React. La consola Vue de la Issue #9 ya cubre el flujo completo.
+- **Despliegue same-origin:** Nginx para publicar React en `/` y Vue en `/logs/` según el ADR 001.
 - **Issue #3:** definición final de privilegios y ruta de logs en el host. La ejecución real de UFW requiere root o `sudo` sin contraseña; `UFW_DRY_RUN=true` permite probar sin privilegios.
 
 El detalle completo, con evidencia por issue, está en [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
@@ -104,10 +106,13 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 │   │   ├── ufw.py             # ejecutor seguro de comandos UFW
 │   │   ├── bans.py            # ips:banned + bans:expirations + historial
 │   │   ├── unban_worker.py    # consumidor security:events:unban
-│   │   ├── monitor.py         # bucle tailer + parser + motor + UFW
+│   │   ├── telemetry.py       # ssh:events + baneos + historial
+│   │   ├── auth.py            # validación del JWT del Servicio 1
+│   │   ├── api.py             # endpoints /telemetry del Frontend B
+│   │   ├── monitor.py         # bucle tailer + parser + motor + UFW + visor
 │   │   ├── runner.py          # python -m app
-│   │   └── main.py            # healthcheck Flask
-│   ├── tests/                 # 79 tests con fakeredis y UFW falso
+│   │   └── main.py            # healthcheck Flask + API de telemetría
+│   ├── tests/                 # 93 tests con fakeredis y UFW falso
 │   ├── scripts/demo_engine.py # evidencia de contador y reset
 │   ├── scripts/demo_ufw.py    # evidencia de bloqueo y expiración UFW
 │   ├── requirements.txt
@@ -124,6 +129,14 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 │       ├── routes/                # ProtectedRoute, PublicOnlyRoute
 │       ├── styles/                # global.css + config.css
 │       └── utils/                 # validation.js, formatRemaining.js
+├── frontend-ops/              # Frontend B — Vue 3 + Vite (consola operativa)
+│   └── src/
+│       ├── api/client.js          # Axios + token compartido + endpoints /telemetry
+│       ├── components/            # AppShell, ConfirmDialog, FullScreenLoader
+│       ├── router/                # /logs/ y /logs/bans
+│       ├── views/                 # LogsView, BansView, LoginRequiredView
+│       ├── styles/global.css      # Mismos design tokens que el Frontend A
+│       └── utils/format.js
 ├── docs/                       # Documentación técnica (índice en docs/README.md)
 │   ├── README.md                  # Índice de la carpeta
 │   ├── REDIS_SCHEMA.md            # Esquema completo de claves Redis
@@ -132,6 +145,8 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 │   ├── contrato-desbaneo.yaml     # Contrato del stream security:events:unban
 │   ├── secuencia-inter_servicios.mmd   # Diagrama del flujo de desbaneo
 │   ├── secuencia-inter_servicios.png
+│   ├── evidencias/issue-08-ufw.md # Evidencia del firewall real y expiración
+│   ├── evidencias/issue-09-frontend-b.md # Capturas de la consola Vue
 │   └── EVALUACION.md              # Informe de calidad (generado por la cátedra)
 ├── docs_contexto/              # Contexto para agentes: visión, arquitectura, historias y estado
 ├── redis/
@@ -153,8 +168,9 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 | Redis 7.2 | `docker compose up -d redis` | `127.0.0.1:6379` |
 | Servicio 1 (FastAPI) | `python -m uvicorn` local | `127.0.0.1:8000` |
 | Servicio 2 (motor) | `python -m app` local | — (proceso continuo) |
-| Servicio 2 (health) | `flask --app app.main run` local | `127.0.0.1:5000` |
+| Servicio 2 (health + telemetría) | `flask --app app.main run` local | `127.0.0.1:5000` |
 | Frontend A (React) | `npm run dev` local | `127.0.0.1:3000` |
+| Frontend B (Vue) | `npm run dev` local | `127.0.0.1:3001` (`/logs/` vía 3000) |
 
 Redis queda en un contenedor porque necesita un servidor real con persistencia en disco (AOF + RDB sobre volumen nombrado). El backend lo alcanza por `127.0.0.1`, así que la comunicación es por el loopback del host, no por una red de Docker.
 
@@ -322,6 +338,36 @@ El JWT se guarda en `sessionStorage`, de modo que se pierde al cerrar la pestañ
 
 El servidor que aloje `build/` debe usar fallback de History API hacia `index.html` para que funcionen rutas como `/reset-password?token=...` al abrirse o recargarse directamente.
 
+## Levantar Frontend B (Vue)
+
+La consola operativa vive en `frontend-ops/` y se sirve bajo `/logs/` para
+compartir el `sessionStorage` con el Frontend A:
+
+```bash
+cd frontend-ops
+cp .env.example .env
+npm ci
+npm run dev
+```
+
+Con el Frontend A corriendo, abrir:
+
+```text
+http://localhost:3000/logs/
+```
+
+El proxy de Vite del Frontend A redirige `/logs` a `127.0.0.1:3001` y
+`/telemetry` a `127.0.0.1:5000`. Si se abre directo en
+`http://localhost:3001/logs/`, configurar `VITE_ADMIN_LOGIN_URL` con la URL
+del login del Frontend A.
+
+La consola incluye:
+
+- **Logs SSH:** fecha/hora, IP, usuario, resultado, tipo y puerto; filas verdes
+  para éxitos y rojas para fallos; filtros y actualización automática.
+- **IPs y baneos:** “Baneadas en el momento” e “Historial de baneadas
+  anteriormente”, con vencimiento, tiempo restante y botón **Desbanear**.
+
 ## Endpoints
 
 | Método | Ruta | Resultado |
@@ -343,8 +389,12 @@ El servidor que aloje `build/` debe usar fallback de History API hacia `index.ht
 | `DELETE` | `/api/v1/banned-ips/{ip}` | Desbaneo manual; publica en `security:events:unban` |
 | `GET` | `/api/v1/history/` | Historial de baneos y desbaneos |
 | `GET` | `/health` (Servicio 2, Flask) | Estado del motor, Redis y configuración UFW |
+| `GET` | `/telemetry/logs?limit=&offset=&outcome=&ip=&username=` | Eventos SSH parseados para el Frontend B |
+| `GET` | `/telemetry/bans` | IPs baneadas en este momento |
+| `GET` | `/telemetry/history?limit=&offset=` | Historial para el Frontend B |
+| `DELETE` | `/telemetry/bans/<ip>` | Encola el desbaneo manual (`202`) |
 
-Los endpoints de configuración requieren el JWT del administrador. Cuando Redis no responde, devuelven `503` con el detalle `Servicio de autenticación no disponible`, en lugar de un `500`.
+Los endpoints de configuración y los de `/telemetry` requieren el JWT del administrador. El Servicio 2 valida firma, emisor, audiencia y `session_version` contra Redis. Cuando Redis no responde, los endpoints del Servicio 1 devuelven `503` con el detalle `Servicio de autenticación no disponible`, en lugar de un `500`.
 
 ## Tests del backend
 
@@ -374,9 +424,18 @@ No necesitan Redis real: usan `fakeredis` y no tocan la base de desarrollo.
 ```bash
 cd backend-service2
 python -m pip install --target ../backend-service1/.pylibs -r requirements.txt -r requirements-dev.txt
-PYTHONPATH=../backend-service1/.pylibs python -m pytest -q       # -> 79 passed
+PYTHONPATH=../backend-service1/.pylibs python -m pytest -q       # -> 93 passed
 PYTHONPATH=../backend-service1/.pylibs python scripts/demo_engine.py
 PYTHONPATH=../backend-service1/.pylibs python scripts/demo_ufw.py  # UFW simulado
+```
+
+### Tests y build del Frontend B
+
+```bash
+cd frontend-ops
+npm ci
+npm run lint
+npm run build
 ```
 
 La integración UFW real se prueba en un host con `sudo` sin contraseña:

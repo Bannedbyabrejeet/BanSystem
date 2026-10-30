@@ -18,6 +18,7 @@ from app.redis_client import (
 )
 from app.redis_config import RedisConfigReader
 from app.tailer import LogTailer
+from app.telemetry import TelemetryStore
 from app.ufw import UfwExecutor
 from app.unban_worker import UnbanWorker
 
@@ -65,6 +66,9 @@ def main(settings: Settings | None = None) -> int:
             logger.exception("No se pudo reconciliar los baneos al arrancar")
 
         engine = SecurityEngine(client, config_reader)
+        event_store = TelemetryStore(
+            client, event_limit=active_settings.ssh_events_limit
+        )
         tailer = LogTailer(
             active_settings.ssh_log_path,
             from_start=active_settings.log_read_from_start,
@@ -77,6 +81,7 @@ def main(settings: Settings | None = None) -> int:
             poll_interval=active_settings.log_poll_interval,
             ban_service=ban_service,
             maintenance_interval=active_settings.ban_maintenance_interval,
+            event_store=event_store,
         )
 
         worker = UnbanWorker(

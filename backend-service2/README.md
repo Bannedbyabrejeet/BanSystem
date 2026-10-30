@@ -5,7 +5,7 @@ evalúa cada fallo contra la configuración que el Servicio 1 guarda en Redis y
 ejecuta el ciclo de vida completo del baneo: **bloqueo en UFW, expiración
 automática y desbaneo manual**.
 
-**Alcance de esta entrega (Issues #7 y #8, Backend B):**
+**Alcance de esta entrega (Issues #7, #8 y #9, Backend B):**
 
 - streaming incremental del archivo (`tail -f`, rotación y truncado);
 - parser de intentos fallidos y exitosos de OpenSSH/PAM;
@@ -16,10 +16,11 @@ automática y desbaneo manual**.
 - **expiración** (US-05): worker sobre `bans:expirations` que ejecuta
   `ufw delete deny ...` y pasa la IP al historial;
 - **desbaneo manual** (US-07): consumidor del stream
-  `security:events:unban` con el grupo `ufw_workers`.
+  `security:events:unban` con el grupo `ufw_workers`;
+- **telemetría** (Issue #9): eventos en `ssh:events` y API `/telemetry`
+  (logs, baneos, historial y solicitud de desbaneo) para el Frontend B.
 
-**Fuera de alcance:** el visor de logs del Frontend B (Vue) y la interfaz de
-control de IPs.
+La interfaz Vue correspondiente vive en [`../frontend-ops/`](../frontend-ops/).
 
 ## Estructura
 
@@ -33,10 +34,13 @@ backend-service2/
 │   ├── ufw.py            # ejecutor seguro de comandos UFW
 │   ├── bans.py           # ciclo de vida: UFW + ips:banned + expiración
 │   ├── unban_worker.py   # consumidor de security:events:unban
-│   ├── monitor.py        # tailer + parser + engine + UFW
+│   ├── telemetry.py      # eventos SSH, baneos e historial para el visor
+│   ├── auth.py           # validación del JWT del Servicio 1
+│   ├── api.py            # endpoints /telemetry del Frontend B
+│   ├── monitor.py        # tailer + parser + engine + UFW + telemetría
 │   ├── runner.py         # python -m app
-│   └── main.py           # healthcheck Flask
-├── tests/                # 79 pruebas con fakeredis
+│   └── main.py           # healthcheck Flask + API de telemetría
+├── tests/                # 93 pruebas con fakeredis
 └── scripts/
     ├── demo_engine.py    # evidencia del contador y findtime
     └── demo_ufw.py       # evidencia de bloqueo y expiración UFW
@@ -63,6 +67,7 @@ Variables propias:
 | `SSH_LOG_PATH` | `/var/log/auth.log` | Archivo a monitorear (`/var/log/secure` en RHEL). |
 | `LOG_READ_FROM_START` | `false` | `false` = solo eventos nuevos; `true` = procesa el archivo completo. |
 | `LOG_POLL_INTERVAL` | `0.5` | Segundos entre sondeos. |
+| `SSH_EVENTS_LIMIT` | `2000` | Eventos retenidos en `ssh:events` para el visor. |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` | `127.0.0.1:6379/0` | Misma instancia que el Servicio 1. |
 | `REDIS_PASSWORD` | vacío | Contraseña de Redis. |
 | `UFW_DRY_RUN` | `false` | Simula UFW (no modifica el firewall). |
@@ -105,12 +110,28 @@ nuevo; si lo trunca, vuelve al offset 0.
 La regla se aplica antes de escribir en Redis. Si Redis falla, `BanService`
 intenta revertir UFW para no dejar una IP bloqueada sin trazabilidad.
 
-## Healthcheck Flask
+## Healthcheck y API Flask
 
 ```bash
 flask --app app.main run --host 127.0.0.1 --port 5000
 curl -s http://127.0.0.1:5000/health
 ```
+
+### API de telemetría (Frontend B)
+
+Todas las rutas exigen el JWT del Servicio 1 en
+`Authorization: Bearer <token>` y validan `session_version` contra Redis.
+
+| Método | Ruta | Resultado |
+|---|---|---|
+| `GET` | `/telemetry/logs?limit=&offset=&outcome=&ip=&username=` | Eventos SSH paginados y contadores. |
+| `GET` | `/telemetry/bans` | IPs baneadas en este momento. |
+| `GET` | `/telemetry/history?limit=&offset=` | Historial de baneos/desbaneos. |
+| `DELETE` | `/telemetry/bans/<ip>` | Encola un `UNBAN` en `security:events:unban` (`202`). |
+
+El desbaneo no ejecuta UFW desde el proceso Flask: publica el evento para que
+el worker del proceso motor (que corre con privilegios) elimine la regla y
+el timeout. Si el motor no está corriendo, la solicitud queda en el stream.
 
 ## Pruebas y evidencia
 
@@ -130,5 +151,7 @@ tiempo. En modo `--real` consulta `ufw status` antes y después y espera el
 
 ## Evidencia
 
-La evidencia completa de la Issue #8 está en
-[`docs/evidencias/issue-08-ufw.md`](../docs/evidencias/issue-08-ufw.md).
+La evidencia de la Issue #8 está en
+[`docs/evidencias/issue-08-ufw.md`](../docs/evidencias/issue-08-ufw.md) y la
+de la Issue #9 en
+[`docs/evidencias/issue-09-frontend-b.md`](../docs/evidencias/issue-09-frontend-b.md).
