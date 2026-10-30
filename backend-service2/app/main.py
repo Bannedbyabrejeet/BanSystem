@@ -39,6 +39,11 @@ def create_app(
             "environment": active_settings.environment,
             "redis": "up" if redis_alive else "down",
             "log_path": active_settings.ssh_log_path,
+            "ufw": {
+                "binary": active_settings.ufw_binary,
+                "ssh_port": active_settings.ufw_ssh_port,
+                "dry_run": active_settings.ufw_dry_run,
+            },
         }
         return body, 200 if redis_alive else 503
 

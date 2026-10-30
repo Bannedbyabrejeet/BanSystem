@@ -54,6 +54,40 @@ class Settings(BaseSettings):
     log_encoding: str = "utf-8"
 
     # ------------------------------------------------------------------
+    # UFW (Issue #8)
+    # ------------------------------------------------------------------
+    #: ``True`` ejecuta UFW en modo simulación: registra el comando pero no
+    #: modifica el firewall. Útil para desarrollo y para las pruebas manuales.
+    ufw_dry_run: bool = False
+    #: Binario de UFW. En Debian/Ubuntu suele ser ``/usr/sbin/ufw``.
+    ufw_binary: str = "ufw"
+    #: Ejecutar mediante ``sudo -n`` (sin prompt interactivo). Si el proceso
+    #: corre como root puede dejarse en ``True``; sudo no pide contraseña.
+    ufw_use_sudo: bool = True
+    #: Puerto SSH que se bloquea con la regla ``deny from <IP> to any port``.
+    ufw_ssh_port: int = Field(default=22, ge=1, le=65535)
+    #: Tiempo máximo de espera de cada comando UFW.
+    ufw_command_timeout: float = Field(default=10.0, gt=0, le=120)
+
+    # ------------------------------------------------------------------
+    # Baneos: expiración y desbaneo manual (Issue #8)
+    # ------------------------------------------------------------------
+    #: Cada cuántos segundos el motor revisa baneos vencidos en Redis.
+    ban_maintenance_interval: float = Field(default=5.0, gt=0, le=300)
+    #: Stream del contrato de desbaneo manual (Issue #2).
+    unban_stream: str = "security:events:unban"
+    #: Consumer group definido en ``docs/contrato-desbaneo.yaml``.
+    unban_consumer_group: str = "ufw_workers"
+    #: Nombre del consumidor. Vacío = ``service2-<host>-<pid>``.
+    unban_consumer_name: str = ""
+    #: ``XREADGROUP BLOCK`` en milisegundos.
+    unban_block_ms: int = Field(default=1000, ge=0, le=60_000)
+    #: Cantidad máxima de mensajes leídos por iteración.
+    unban_batch_size: int = Field(default=10, ge=1, le=100)
+    #: Tiempo mínimo (ms) que un mensaje fallido espera antes de reintentarse.
+    unban_retry_min_idle_ms: int = Field(default=5_000, ge=0, le=600_000)
+
+    # ------------------------------------------------------------------
     # Flask (healthcheck del proceso)
     # ------------------------------------------------------------------
     api_host: str = "127.0.0.1"

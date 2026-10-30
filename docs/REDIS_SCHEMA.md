@@ -7,9 +7,10 @@
 4. [Lista Blanca (Whitelist)](#3-lista-blanca-whitelist)
 5. [Contador de Intentos Fallidos (Sliding Window)](#4-contador-de-intentos-fallidos-sliding-window)
 6. [IPs Baneadas Activas](#5-ips-baneadas-activas)
-7. [Historial de IPs](#6-historial-de-ips)
-8. [Broker de Desbaneo Manual (Redis Streams)](#7-broker-de-desbaneo-manual-redis-streams)
-9. [Resumen de TTLs y Políticas](#resumen-de-ttls-y-políticas)
+7. [Vencimiento de Baneos](#51-vencimiento-de-baneos-bans-expirations)
+8. [Historial de IPs](#6-historial-de-ips)
+9. [Broker de Desbaneo Manual (Redis Streams)](#7-broker-de-desbaneo-manual-redis-streams)
+10. [Resumen de TTLs y Políticas](#resumen-de-ttls-y-políticas)
 
 ---
 
@@ -22,7 +23,8 @@
 | `config:*` | Hash / Set | Parámetros y whitelist | Servicio 1 + Servicio 2 |
 | `failed:<IP>` | Sorted Set | Contador de intentos fallidos | Servicio 2 (Flask) |
 | `ips:banned` | Hash | IPs baneadas activas | Servicio 1 + Servicio 2 |
-| `ips:history` | List | Historial de auditoría | Servicio 1 (FastAPI) |
+| `bans:expirations` | Sorted Set | Vencimiento de cada baneo | Servicio 2 |
+| `ips:history` | List | Historial de auditoría | Servicio 1 + Servicio 2 |
 | `security:events:*` | Stream | Broker de eventos (desbaneo) | Servicio 1 → Servicio 2 |
 
 Todos los valores de TTL se expresan en **segundos**. Los timestamps son **UNIX epoch** (enteros).
@@ -323,6 +325,11 @@ ips:banned
 |---|---|
 | `<IP>` | `{"banned_at": <unix_ts>, "expires_at": <unix_ts>, "duration_min": <int>, "reason": "<string>"}` |
 
+**Escritura (Issue #8):** el Servicio 1 sigue creando baneos manuales; el
+Servicio 2 escribe el hash al aplicar un baneo automático y lo elimina cuando
+el baneo vence o se desbanea manualmente. El hash **no tiene TTL**: la
+expiración se controla con `bans:expirations` (§5.1).
+
 ### Ejemplo `redis-cli`
 ```bash
 # Baneo
@@ -379,6 +386,36 @@ for ip_addr, info_json in r.hgetall('ips:banned').items():
     print(f"{ip_addr}: {info}")
 ```
 
+### 5.1. Vencimiento de baneos (`bans:expirations`)
+
+### Clave
+```
+bans:expirations
+```
+
+### Tipo
+**Sorted Set (ZSET)**. El miembro es la IP y el score es su `expires_at`
+(timestamp UNIX en segundos).
+
+### Operaciones del Servicio 2
+```text
+# Registrar o refrescar el vencimiento al banear
+ZADD bans:expirations <expires_at> <IP>
+
+# Buscar baneos vencidos (worker de expiración)
+ZRANGEBYSCORE bans:expirations -inf <now>
+
+# Quitar el vencimiento al desbanear o expirar
+ZREM bans:expirations <IP>
+```
+
+El worker del Servicio 2 ejecuta `ufw delete deny from <IP> to any port 22`
+para cada IP vencida, elimina el campo de `ips:banned`, quita el miembro del
+ZSET y agrega una entrada `unbanned` con `unban_reason="timeout"` a
+`ips:history`. Si UFW falla, la IP permanece en el ZSET y se reintenta en el
+siguiente ciclo. Al arrancar, el Servicio 2 reconstruye este ZSET desde el
+`expires_at` de `ips:banned` (reconciliación).
+
 ---
 
 ## 6. Historial de IPs
@@ -390,6 +427,10 @@ ips:history
 
 ### Tipo
 **List (LPUSH / LRANGE)**
+
+El Servicio 1 registra los baneos y desbaneos manuales; el Servicio 2 agrega
+los baneos automáticos y las expiraciones (`unban_reason="timeout"`). Ambas
+componentes aplican `LTRIM 0 999` para acotar el historial.
 
 ### Formato de Entrada
 Cada elemento es un **string JSON** con la auditoría completa del evento de baneo.
@@ -511,39 +552,47 @@ async def publish_unban(ip: str, requested_by: str):
 ```
 
 #### Consumidor (Servicio 2 — Flask)
+Implementación vigente en `backend-service2/app/unban_worker.py` (cliente
+síncrono). El grupo se crea con `id="0"` para procesar también los mensajes
+publicados antes de que arrancara el worker:
+
 ```python
-from redis.asyncio import Redis as AsyncRedis
+stream = "security:events:unban"
+group = "ufw_workers"
+consumer = "service2-<host>-<pid>"
 
-stream = 'security:events:unban'
-group = 'ufw_workers'
-consumer = 'worker1'
-
-# Crear grupo si no existe (una sola vez al iniciar)
 try:
-    await r.xgroup_create(stream, group, id='0', mkstream=True)
-except redis.exceptions.ResponseError:
-    pass  # Ya existe
+    r.xgroup_create(stream, group, id="0", mkstream=True)
+except redis.exceptions.ResponseError as exc:
+    if "BUSYGROUP" not in str(exc):
+        raise
 
-async def consume_unban_events():
-    """Bucle de consumo de eventos de desbaneo."""
-    messages = await r.xreadgroup(
+while running:
+    messages = r.xreadgroup(
         group,
         consumer,
-        {stream: '>'},   # '>' = solo mensajes nuevos
-        count=1,
-        block=5000,       # Esperar hasta 5s si no hay mensajes
+        {stream: ">"},   # mensajes nuevos
+        count=10,
+        block=1000,
     )
-    for stream_name, entries in messages:
+    for stream_name, entries in messages or []:
         for msg_id, fields in entries:
-            ip = fields[b'ip'].decode()
-            requested_by = fields[b'requested_by'].decode()
+            ip = fields["ip"]
+            requested_by = fields["requested_by"]
 
-            # --- Ejecutar desbaneo en UFW aquí ---
-            # run_ufw_unban(ip)
+            # 1. ufw delete deny from <IP> to any port 22
+            # 2. HDEL ips:banned <IP> + ZREM bans:expirations <IP>
+            # 3. XACK solo si UFW respondió bien
+            r.xack(stream, group, msg_id)
 
-            # Confirmar procesamiento
-            await r.xack(stream, group, msg_id)
+    # Los mensajes que fallaron quedan pendientes; XAUTOCLAIM los reintenta
+    # después de UNBAN_RETRY_MIN_IDLE_MS.
+    r.xautoclaim(stream, group, consumer, min_idle_time=5000, start_id="0-0")
 ```
+
+Si la IP es inválida o la acción no es `UNBAN`, el mensaje se descarta con
+`XACK` para no bloquear el stream. Si UFW falla, **no** se confirma y el
+mensaje se reintenta.
 
 #### Con `aioredis` (alternativa)
 ```python
@@ -582,6 +631,7 @@ messages = await r.xreadgroup(
 | `config:settings` | Hash | Ninguno | Persistente | Servicio 1 |
 | `config:whitelist` | Set | Ninguno | Persistente | Servicio 1 + 2 |
 | `failed:<IP>` | ZSET | `findtime` segundos | Auto-expira | Servicio 2 |
-| `ips:banned` | Hash | `bantime * 60` segundos | Auto-expira al vencer | Servicio 1 + 2 |
-| `ips:history` | List | Sin límite (LTRIM a 1000) | Retención acotada | Servicio 1 |
+| `ips:banned` | Hash | Ninguno (sin TTL de campo) | Expiración vía `bans:expirations` | Servicio 1 + 2 |
+| `bans:expirations` | ZSET | Ninguno | Worker de expiración del Servicio 2 | Servicio 2 |
+| `ips:history` | List | Sin límite (LTRIM a 1000) | Retención acotada | Servicio 1 + 2 |
 | `security:events:unban` | Stream | MaxLen ~10000 | Appender-only | Servicio 1 → 2 |

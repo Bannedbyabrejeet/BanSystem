@@ -7,9 +7,9 @@ Para cada intento fallido:
 3. agrega el intento actual al ZSET ``failed:<IP>`` y renueva su TTL;
 4. compara el contador con ``maxretry`` y emite una decisión.
 
-Este módulo **no ejecuta UFW** ni escribe ``ips:banned``: el bloqueo directo
-del firewall queda fuera del alcance de la Issue #7. El consumidor de la
-decisión ``BAN_REQUIRED`` será el módulo de integración con UFW.
+Este módulo **no ejecuta UFW** ni escribe ``ips:banned``: mantiene la
+decisión desacoplada y testeable. El consumidor de ``BAN_REQUIRED`` es
+:mod:`app.bans`, que aplica la regla de firewall y persiste la sanción.
 """
 
 from __future__ import annotations

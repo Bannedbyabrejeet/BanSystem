@@ -5,13 +5,27 @@
 Detalle completo en [`docs/EVALUACION.md`](docs/EVALUACION.md).
 <!-- calidad:fin -->
 
-# BannedbyAbrejeet — Configuración de baneos, whitelist, autenticación y motor SSH
+# BannedbyAbrejeet — Baneo SSH, UFW, whitelist y administración web
 
-Implementación de Backend A (FastAPI + Redis), Backend B (motor de seguridad + lector de logs SSH) y Frontend A (React + React Router v6) para el setup único, login, sesión JWT, recuperación de contraseña y configuración de baneos, sobre Redis dockerizado. Cubre las issues **#4** (infraestructura), **#5** (autenticación), **#6** (parámetros de baneo, ventana de tolerancia y whitelist), **#7 Backend B** (lector/parser SSH y motor de seguridad) y **#24** (migración de hash a Argon2id). Esta entrega no incluye configuración UFW ni el visor del Frontend B.
+Implementación de Backend A (FastAPI + Redis), Backend B (motor de seguridad,
+lector de logs SSH e integración UFW) y Frontend A (React + React Router v6)
+para el setup único, login, sesión JWT, recuperación de contraseña,
+configuración de baneos y ciclo de vida de las sanciones, sobre Redis
+dockerizado. Cubre las issues **#4** (infraestructura), **#5**
+(autenticación), **#6** (parámetros de baneo, ventana de tolerancia y
+whitelist), **#7 Backend B** (lector/parser SSH y motor de seguridad), **#8**
+(bloqueo/desbaneo UFW y expiración) y **#24** (migración de hash a Argon2id).
+No incluye el visor de logs del Frontend B.
 
 ## Estado del proyecto
 
-Esta entrega corresponde a las **issues #5 (autenticación)**, **#6 (configuración de baneos)**, **#7 Backend B (lector de logs SSH y motor de seguridad)** y **#24 (Argon2id)**. Cubre el Servicio 1 (FastAPI), el motor del Servicio 2 (Python/Flask) y el Frontend A (React); **no** incluye todavía la ejecución de UFW, el consumo del stream de desbaneo ni el Frontend B (Vue).
+Esta entrega corresponde a las **issues #5 (autenticación)**, **#6
+(configuración de baneos)**, **#7 Backend B (lector de logs SSH y motor de
+seguridad)**, **#8 (integración UFW, expiración y desbaneo manual)** y **#24
+(Argon2id)**. Cubre el Servicio 1 (FastAPI), el motor del Servicio 2
+(Python/Flask), el Frontend A (React) y los workers de firewall; **no**
+incluye el visor de logs del Frontend B (Vue) ni la vista de IPs baneadas en
+el Frontend A.
 
 ### Implementado
 
@@ -19,6 +33,7 @@ Esta entrega corresponde a las **issues #5 (autenticación)**, **#6 (configuraci
 - **Autenticación (Issue #5):** setup único atómico, login con JWT, sesión validada contra `session_version` y recuperación de contraseña por correo (token opaco con TTL de 900 s).
 - **Configuración (Issue #6 / US-02, US-08, US-09):** endpoints y formulario del dashboard para `maxretry`, `bantime` y `findtime`, más alta/baja de IPs y subredes de la lista blanca. Las IPs locales `127.0.0.1` y `::1` siempre están presentes y no pueden eliminarse (`409`).
 - **Motor de seguridad (Issue #7 Backend B / BACK2-01, BACK2-02):** lector continuo de `auth.log` con rotación/truncado, parser de fallos y éxitos SSH, lectura dinámica de la configuración Redis, whitelist exacta/CIDR y contador deslizante `failed:<IP>` con `findtime` y `maxretry`.
+- **Integración UFW (Issue #8 / BACK2-03, BACK2-04):** al alcanzar el umbral se ejecuta `ufw deny from <IP> to any port 22` y se registra la sanción en `ips:banned` + `ips:history`. El ZSET `bans:expirations` permite que un worker elimine la regla automáticamente al vencer `bantime` (US-05). Las órdenes manuales del dashboard llegan por el stream `security:events:unban`, se ejecutan con `ufw delete deny ...` y se confirman con `XACK` (US-07). Evidencia en [`docs/evidencias/issue-08-ufw.md`](docs/evidencias/issue-08-ufw.md).
 - **Hash de contraseñas (Issue #24):** Argon2id mediante `argon2-cffi`, en sustitución de bcrypt.
 - **Correo:** envío real por SMTP (probado con Gmail) o modo `log` para desarrollo.
 - **Frontend A:** vistas de setup, login, "olvidé mi contraseña", restablecer contraseña y dashboard con los paneles de configuración y whitelist.
@@ -28,8 +43,8 @@ Esta entrega corresponde a las **issues #5 (autenticación)**, **#6 (configuraci
 ### Pendiente
 
 - **Issue #7 (Servicio 1):** vista del Frontend A para IPs baneadas e historial; la API ya existe.
-- **Issue #8:** ejecución de UFW (bloqueo/desbloqueo), consumo del stream de desbaneo y visor de logs en el Frontend B (Vue).
-- **Issue #3:** definición final de privilegios y ruta de logs en el host.
+- **Issue #8:** visor de logs en el Frontend B (Vue). El backend de UFW, expiración y desbaneo manual ya está implementado.
+- **Issue #3:** definición final de privilegios y ruta de logs en el host. La ejecución real de UFW requiere root o `sudo` sin contraseña; `UFW_DRY_RUN=true` permite probar sin privilegios.
 
 El detalle completo, con evidencia por issue, está en [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
@@ -77,20 +92,24 @@ El detalle completo del esquema Redis está en [`docs/REDIS_SCHEMA.md`](docs/RED
 │   │   │   ├── config_service.py  # Parámetros de baneo y whitelist
 │   │   │   └── mail_service.py    # Envío SMTP o log en modo desarrollo
 │   │   └── main.py                # App, lifespan, CORS, handlers de error
-│   ├── tests/                     # Pytest (85 tests con Redis)
+│   ├── tests/                     # Pytest (88 tests con Redis)
 │   ├── requirements.txt
 │   └── requirements-dev.txt
-├── backend-service2/          # Backend B — motor de seguridad y lector SSH
+├── backend-service2/          # Backend B — motor de seguridad, UFW y workers
 │   ├── app/
 │   │   ├── parser.py          # auth.log -> SSHEvent (fallo/éxito)
 │   │   ├── tailer.py          # tail -f con rotación y truncado
 │   │   ├── redis_config.py    # config:settings + config:whitelist
-│   │   ├── engine.py          # ventana findtime + maxretry (sin UFW)
-│   │   ├── monitor.py         # bucle tailer + parser + motor
+│   │   ├── engine.py          # ventana findtime + maxretry
+│   │   ├── ufw.py             # ejecutor seguro de comandos UFW
+│   │   ├── bans.py            # ips:banned + bans:expirations + historial
+│   │   ├── unban_worker.py    # consumidor security:events:unban
+│   │   ├── monitor.py         # bucle tailer + parser + motor + UFW
 │   │   ├── runner.py          # python -m app
 │   │   └── main.py            # healthcheck Flask
-│   ├── tests/                 # 53 tests con fakeredis
+│   ├── tests/                 # 79 tests con fakeredis y UFW falso
 │   ├── scripts/demo_engine.py # evidencia de contador y reset
+│   ├── scripts/demo_ufw.py    # evidencia de bloqueo y expiración UFW
 │   ├── requirements.txt
 │   └── requirements-dev.txt
 ├── frontend-admin/            # Frontend A — React 18 + Vite
@@ -248,9 +267,28 @@ PYTHONPATH=../backend-service1/.pylibs flask --app app.main run --host 127.0.0.1
 curl -s http://127.0.0.1:5000/health
 ```
 
-**No ejecuta UFW ni escribe `ips:banned`**: al alcanzar `maxretry` emite la
-decisión `ban_required` y registra una advertencia en consola. El bloqueo real
-corresponde a la siguiente issue.
+Al alcanzar `maxretry`, el motor ejecuta la regla UFW y persiste la sanción.
+El proceso necesita permisos para ejecutar `ufw` (root o `sudo -n`). Para
+desarrollo sin privilegios:
+
+```bash
+UFW_DRY_RUN=true PYTHONPATH=../backend-service1/.pylibs python -m app
+```
+
+Variables de la integración:
+
+| Variable | Por defecto | Descripción |
+|---|---|---|
+| `UFW_DRY_RUN` | `false` | Simula los comandos sin modificar el firewall. |
+| `UFW_BINARY` | `ufw` | Ruta o nombre del binario. |
+| `UFW_USE_SUDO` | `true` | Ejecuta `sudo -n ufw ...`. |
+| `UFW_SSH_PORT` | `22` | Puerto bloqueado. |
+| `BAN_MAINTENANCE_INTERVAL` | `5` | Segundos entre revisiones de baneos vencidos. |
+| `UNBAN_CONSUMER_GROUP` | `ufw_workers` | Grupo del stream de desbaneo manual. |
+
+El worker de desbaneo consume `security:events:unban` en paralelo al lector de
+logs. La regla se elimina con `ufw delete deny from <IP> to any port 22` y se
+confirma el mensaje solo si UFW respondió bien.
 
 ## Levantar Frontend A
 
@@ -300,7 +338,11 @@ El servidor que aloje `build/` debe usar fallback de History API hacia `index.ht
 | `GET` | `/api/v1/config/whitelist` | Lista blanca y entradas locales protegidas |
 | `POST` | `/api/v1/config/whitelist` | Agrega una IP o subred (normaliza CIDR) |
 | `DELETE` | `/api/v1/config/whitelist?entry=...` | Elimina una entrada; `409` si es `127.0.0.1` o `::1` |
-| `GET` | `/health` (Servicio 2, Flask) | Estado del motor y de Redis |
+| `GET` | `/api/v1/banned-ips/` | IPs baneadas activas |
+| `POST` | `/api/v1/banned-ips/?ip=...` | Baneo manual (registro en Redis) |
+| `DELETE` | `/api/v1/banned-ips/{ip}` | Desbaneo manual; publica en `security:events:unban` |
+| `GET` | `/api/v1/history/` | Historial de baneos y desbaneos |
+| `GET` | `/health` (Servicio 2, Flask) | Estado del motor, Redis y configuración UFW |
 
 Los endpoints de configuración requieren el JWT del administrador. Cuando Redis no responde, devuelven `503` con el detalle `Servicio de autenticación no disponible`, en lugar de un `500`.
 
@@ -323,7 +365,7 @@ python -m pip install --target .pylibs -r requirements.txt -r requirements-dev.t
 TEST_REDIS_URL="redis://127.0.0.1:6399/15" PYTHONPATH=.pylibs python -m pytest -q
 ```
 
-Con el Redis de pruebas se ejecutan **85 tests**. Sin `TEST_REDIS_URL` se ejecutan 18 y se omiten 67, con un mensaje explicativo en la salida.
+Con el Redis de pruebas se ejecutan **88 tests**. Sin `TEST_REDIS_URL` se ejecutan 18 y se omiten 70, con un mensaje explicativo en la salida.
 
 ### Tests del Servicio 2
 
@@ -332,8 +374,15 @@ No necesitan Redis real: usan `fakeredis` y no tocan la base de desarrollo.
 ```bash
 cd backend-service2
 python -m pip install --target ../backend-service1/.pylibs -r requirements.txt -r requirements-dev.txt
-PYTHONPATH=../backend-service1/.pylibs python -m pytest -q       # -> 53 passed
+PYTHONPATH=../backend-service1/.pylibs python -m pytest -q       # -> 79 passed
 PYTHONPATH=../backend-service1/.pylibs python scripts/demo_engine.py
+PYTHONPATH=../backend-service1/.pylibs python scripts/demo_ufw.py  # UFW simulado
+```
+
+La integración UFW real se prueba en un host con `sudo` sin contraseña:
+
+```bash
+PYTHONPATH=../backend-service1/.pylibs python scripts/demo_ufw.py --real
 ```
 
 La salida del demo muestra el contador `1 -> 2 -> 3`, la decisión

@@ -6,3 +6,7 @@ payload:
   ip: "192.168.1.50"      # Dirección IP objetivo a desbloquear
   requested_by: "admin"   # Identificador del usuario administrador
   timestamp: 1724851200   # Timestamp Unix (Epoch) de la orden
+consumer_behavior:
+  ack: "after_ufw_success"   # XACK solo si `ufw delete` respondió bien
+  retry: "xautoclaim"        # Reintento de mensajes pendientes
+  discard_invalid: true      # IP inválida o acción desconocida -> XACK

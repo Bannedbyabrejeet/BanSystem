@@ -384,22 +384,26 @@ Siguiendo el estándar **INVEST** y la convención *Como / Quiero / Para*, se es
 - **Autenticación de administrador (Issue #5):** Épica 1 completa — setup único, login, sesión JWT, recuperación de contraseña con TTL y política de contraseñas.
 - **Configuración de seguridad (Issue #6):** Épica 2 completa en el Servicio 1 y el Frontend A — parámetros `maxretry`, `bantime`, `findtime` (US-02/US-09) y lista blanca con `127.0.0.1` y `::1` protegidas (US-08).
 - **Servicio 2 — BACK2-01 / BACK2-02 (Issue #7 Backend B):** lector continuo de auth logs, parser de fallos/éxitos, lectura de `config:settings`/`config:whitelist`, contador `failed:<IP>` y ventana `findtime` en `backend-service2/`.
+- **Servicio 2 — BACK2-03 / BACK2-04 (Issue #8 Backend B):** bloqueo/desbloqueo UFW (`ufw deny/delete deny from <IP> to any port 22`), persistencia en `ips:banned`/`ips:history`, expiración automática con `bans:expirations` y consumidor del stream `security:events:unban`. Evidencia en `docs/evidencias/issue-08-ufw.md`.
 - **Hash de contraseñas (Issue #24):** Argon2id (`argon2-cffi`) en reemplazo de bcrypt.
 - **Correo:** entrega real por SMTP (probado con Gmail) además del modo `log`.
 - **Evaluación de calidad (cátedra):** informe generado automáticamente en `docs/EVALUACION.md` (2026-10-17) — índice **7/100**, **9/15** criterios cumplidos, **NO aprobado**. Detalle y acciones derivadas en §8 de [`docs_contexto/04_estado_actual_y_tareas.md`](docs_contexto/04_estado_actual_y_tareas.md).
 
 ### Pendiente
 
-- **Épica 4 (baneo automático):** falta ejecutar UFW a partir de la decisión
-  `ban_required` y persistir `ips:banned` (Issue #8), dependiente del spike #3.
+- **Épica 4 (baneo automático):** ✅ implementada en la Issue #8 (UFW,
+  `ips:banned`, `bans:expirations` y expiración). La ejecución real requiere
+  root o `sudo` sin contraseña; `UFW_DRY_RUN=true` permite probar sin
+  privilegios.
 - **Épica 5 (gestión de IPs):** la API del Servicio 1 ya está en `main`; falta
   la vista del Frontend A.
-- **Frontend B (Vue):** visor de logs y desbaneo manual, aún no iniciado.
+- **Frontend B (Vue):** visor de logs y control de desbaneo manual, aún no
+  iniciado. El backend del desbaneo ya está implementado.
 
 ### Estado de tareas por desarrollador
 
 | Área | Tareas cerradas | Tareas pendientes |
 |---|---|---|
 | Desarrollador 1 | INFRA-01, BACK1-01, BACK1-02, FRONT-01, FRONT-02 | BACK1-03 (vista), FRONT-03 |
-| Desarrollador 2 | BACK2-01, BACK2-02 | BACK2-03, BACK2-04, FRONT-04, FRONT-05 |
+| Desarrollador 2 | BACK2-01, BACK2-02, BACK2-03, BACK2-04 | FRONT-04, FRONT-05 |
 

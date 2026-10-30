@@ -11,8 +11,18 @@ from typing import Final
 CONFIG_SETTINGS: Final[str] = "config:settings"
 #: Set con IPs y redes CIDR exentas de bloqueo.
 CONFIG_WHITELIST: Final[str] = "config:whitelist"
-#: Hash de IPs baneadas. El motor solo lo consulta; UFW se implementa aparte.
+#: Hash de IPs baneadas. Lo escriben el Servicio 1 (baneo manual) y el
+#: Servicio 2 (baneo automático y expiración).
 IPS_BANNED: Final[str] = "ips:banned"
+#: Lista JSON con el historial de baneos y desbaneos.
+IPS_HISTORY: Final[str] = "ips:history"
+#: ZSET auxiliar con score = ``expires_at`` de cada IP. Permite al worker de
+#: expiración encontrar los baneos vencidos sin recorrer todo el hash.
+BAN_EXPIRATIONS: Final[str] = "bans:expirations"
+#: Stream del contrato de desbaneo manual (Servicio 1 -> Servicio 2).
+UNBAN_STREAM: Final[str] = "security:events:unban"
+#: Consumer group del stream de desbaneo.
+UNBAN_CONSUMER_GROUP: Final[str] = "ufw_workers"
 #: Prefijo del ZSET de intentos fallidos por IP.
 FAILED_ATTEMPTS_PREFIX: Final[str] = "failed:"
 

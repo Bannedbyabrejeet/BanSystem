@@ -13,11 +13,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from app.api.deps import ConfigServiceDep, CurrentAdminDep
 from app.core import constants
-from app.schemas.config import BanRecord, BanSettings, HistoryEntry, WhitelistMutationResponse
-from app.services.config_service import (
-    ProtectedWhitelistEntryError,
-    WhitelistEntryNotFoundError,
-)
+from app.schemas.config import BanRecord, WhitelistMutationResponse
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +130,7 @@ async def ban_ip_manual(
         )
 
     now = int(time.time())
-    bantime = service.get_settings().bantime  # type: ignore[attr-defined]
+    bantime = (await service.get_settings()).bantime
     expires_at = now + (bantime * 60) if bantime else 0
 
     # Registrar en ips:banned
@@ -158,7 +154,6 @@ async def ban_ip_manual(
         "reason": "Manual administration",
         "unban_reason": "manual",
     }
-    from app.services.config_service import ConfigService
     # Usar Lua para escribir en la lista de historial de forma atómica
     lua_script = """
     local history_key = KEYS[1]
@@ -177,28 +172,11 @@ async def ban_ip_manual(
         1000,  # max 1000 entries
     )
 
-    # Publicar evento en stream para Servicio 2 (desbaneo automático via UFW)
-    try:
-        from redis.asyncio import Redis
-        stream = "security:events:unban"
-        msg_id = await service.redis.xadd(
-            stream,
-            {
-                "action": "UNBAN",
-                "ip": normalized_ip,
-                "requested_by": admin.username,
-                "timestamp": str(now),
-            },
-            maxlen=10000,
-            approximate=True,
-        )
-        logger.info("Evento de desbaneo publicado: %s", msg_id)
-    except Exception:
-        # No es crítico si el stream falla; el baneo se guarda igualmente
-        logger.warning("No se pudo publicar evento en stream security:events:unban")
-
+    # Un baneo manual no publica en ``security:events:unban``: ese stream es
+    # exclusivamente para órdenes de desbaneo (Issue #2). El Servicio 2
+    # reconcilia ``ips:banned`` y aplica la expiración con ``bantime``.
     logger.info(
-        "El administrador %s banearon IP %s", admin.username, normalized_ip
+        "El administrador %s baneó manualmente la IP %s", admin.username, normalized_ip
     )
 
     return WhitelistMutationResponse(
@@ -236,8 +214,17 @@ async def unban_ip_manual(
     """``DELETE /api/v1/banned-ips/{ip}`` — US-07: desbanear IP manualmente."""
 
     import json
+    import time
 
-    normalized_ip = ip.strip()
+    from app.core.network import normalize_ip_or_network
+
+    try:
+        normalized_ip = normalize_ip_or_network(ip)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=constants.INVALID_NETWORK_ENTRY,
+        ) from exc
 
     # Verificar si está baneada
     exists = await service.redis.hexists("ips:banned", normalized_ip)
