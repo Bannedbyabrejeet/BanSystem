@@ -146,9 +146,11 @@ Implementado en `backend-service2/` (Python + Flask para el healthcheck):
 
 ### 2.9 Integración UFW, expiración y desbaneo manual — Issue #8 (Backend B)
 
-- **Ejecutor UFW** (`app/ufw.py`): construye `ufw deny from <IP> to any port
-  22` y `ufw delete deny from <IP> to any port 22`, valida la IP con
-  `ipaddress`, usa `subprocess` sin shell y soporta `UFW_DRY_RUN`.
+- **Ejecutor UFW** (`app/ufw.py`): construye `ufw insert 1 deny from <IP> to
+  any port 22` (para que la denegación tenga prioridad sobre un
+  `allow 22/tcp` general) y `ufw delete deny from <IP> to any port 22`.
+  Valida la IP con `ipaddress`, usa `subprocess` sin shell y soporta
+  `UFW_DRY_RUN`.
 - **Ciclo de vida** (`app/bans.py`): al banear escribe `ips:banned`,
   `bans:expirations` (ZSET por `expires_at`) e `ips:history`; borra
   `failed:<IP>`. Si Redis falla tras aplicar UFW, revierte la regla.

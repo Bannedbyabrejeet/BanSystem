@@ -12,7 +12,8 @@ automática y desbaneo manual**.
 - lectura dinámica de `config:settings` y `config:whitelist`;
 - contador deslizante por IP en `failed:<IP>` con TTL = `findtime`;
 - decisión `ban_required` al alcanzar `maxretry`;
-- **UFW** (US-04): `ufw deny from <IP> to any port 22`;
+- **UFW** (US-04): `ufw insert 1 deny from <IP> to any port 22` (antes de
+  cualquier `allow 22/tcp` general);
 - **expiración** (US-05): worker sobre `bans:expirations` que ejecuta
   `ufw delete deny ...` y pasa la IP al historial;
 - **desbaneo manual** (US-07): consumidor del stream
@@ -91,7 +92,7 @@ nuevo; si lo trunca, vuelve al offset 0.
 
 1. `SecurityEngine` detecta `maxretry` fallos dentro de `findtime` y devuelve
    `BAN_REQUIRED`.
-2. `BanService.ban` ejecuta `ufw deny from <IP> to any port 22`.
+2. `BanService.ban` ejecuta `ufw insert 1 deny from <IP> to any port 22`.
 3. Si UFW responde bien, escribe en una transacción:
    - `ips:banned` (hash con `banned_at`, `expires_at`, `duration_min` y
      `reason`);

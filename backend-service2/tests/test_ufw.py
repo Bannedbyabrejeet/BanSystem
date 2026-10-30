@@ -39,6 +39,8 @@ def test_block_builds_the_documented_ufw_command() -> None:
     assert runner.commands == [
         [
             "ufw",
+            "insert",
+            "1",
             "deny",
             "from",
             "203.0.113.42",
