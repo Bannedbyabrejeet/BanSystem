@@ -3,20 +3,20 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-10-29.
+> Generado: 2026-11-02.
 
 ## 1. Veredicto
 
 | Aspecto | Resultado |
 |---|---|
 | Tipo de proyecto | frontend |
-| Índice de calidad de servicios | **6/100** (mínimo 60) |
+| Índice de calidad de servicios | **5/100** (mínimo 60) |
 | Criterios cumplidos | **7/15** |
 | Aprobado (semáforo) | **NO** |
-| Código (LOC) | 6,812 |
-| Archivos de código | 75 |
-| Tests (archivos) | 12 |
-| Cobertura de líneas | 67.6% (mínimo 80%) |
+| Código (LOC) | 8,175 |
+| Archivos de código | 83 |
+| Tests (archivos) | 16 |
+| Cobertura de líneas | 70.5% (mínimo 80%) |
 | Capas detectadas | vistas, servicios, estado |
 
 > **Aprobado** exige cumplir **todos** los criterios del semáforo. No es una nota: sirve para ordenar y priorizar la revisión.
@@ -25,7 +25,7 @@
 
 | Autor | Commits | Código (LOC) | Tests (LOC) | Docs (LOC) | Días activos | % del código |
 |---|---:|---:|---:|---:|---:|---:|
-| SantiMulet | 19 | 7,048 | 1,797 | 2,821 | 11 | 100% |
+| SantiMulet | 20 | 8,091 | 2,422 | 3,290 | 12 | 100% |
 | manu_abrego_1913 | 5 | 0 | 0 | 253 | 5 | 0% |
 
 > _El LOC de autoría lo calcula RepoSense sobre el historial y puede diferir del LOC de código del análisis de calidad (que mira solo el estado de `main`)._
@@ -51,7 +51,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Un resumen numérico (0-100) que combina todas las señales y métricas del análisis, con topes duros por duplicación.
 - **Por qué importa:** Ordena y prioriza la revisión: un índice bajo indica varias señales que conviene mirar juntas.
-- **Tu resultado:** índice **6/100** _(mínimo 60)_
+- **Tu resultado:** índice **5/100** _(mínimo 60)_
 - **Para investigar la causa:**
     - ¿En qué momento del proyecto se concentraron los problemas (arranque, integración de partes, cierre)?
     - ¿El índice bajó por muchas señales chicas o por una o dos graves?
@@ -61,7 +61,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Porcentaje de bloques de código repetidos (similitud) en el repositorio.
 - **Por qué importa:** Cada copia se mantiene por separado: un arreglo hay que repetirlo y los defectos se multiplican.
-- **Tu resultado:** **5.4%** de duplicación _(máximo 15%)_
+- **Tu resultado:** **5.6%** de duplicación _(máximo 15%)_
 
 ### 3. Secretos hardcodeados (SEC) — A REVISAR
 
@@ -95,7 +95,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Mensajes de depuración olvidados (`console.log`, `print`, `debugger`).
 - **Por qué importa:** Generan ruido en los registros, pueden filtrar datos y dan sensación de código sin terminar.
-- **Tu resultado:** **5** mensaje(s) de depuración olvidado(s) _(máximo 0)_
+- **Tu resultado:** **20** mensaje(s) de depuración olvidado(s) _(máximo 0)_
 - **Para investigar la causa:**
     - ¿Fue depuración que quedó al cerrar una tarea, o se usó como registro permanente?
     - ¿Hubo una revisión final antes de cerrar la issue o la entrega?
@@ -121,7 +121,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Una clase o unidad cuyos métodos y campos no están relacionados entre sí.
 - **Por qué importa:** Una unidad que cambia por motivos distintos es frágil y cuesta entenderla.
-- **Tu resultado:** **2** unidad(es) con baja cohesión _(máximo 0)_
+- **Tu resultado:** **4** unidad(es) con baja cohesión _(máximo 0)_
 - **Para investigar la causa:**
     - ¿La unidad agrupa cosas que en realidad pertenecen a lugares distintos?
     - ¿Cambia por motivos diferentes según la tarea?
@@ -131,7 +131,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Complejidad ciclomática: cantidad de caminos posibles dentro de una función (condicionales, bucles, casos).
 - **Por qué importa:** Muchos caminos = difícil de seguir y de probar; suelen esconderse casos sin cubrir.
-- **Tu resultado:** **47** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 6812 LOC))_
+- **Tu resultado:** **61** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 8175 LOC))_
 - **Para investigar la causa:**
     - ¿Se agregaron condiciones a medida que aparecían casos nuevos?
     - ¿Se probaron todos los caminos o solo el caso principal?
@@ -141,13 +141,13 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Tamaño de las funciones/métodos y cantidad de parámetros.
 - **Por qué importa:** Una función que hace varias cosas cuesta leerla, nombrarla y reutilizarla.
-- **Tu resultado:** **42** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
+- **Tu resultado:** **55** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
 
 ### 13. Acoplamiento alto (Acop) — A REVISAR
 
 - **Qué mide:** Cuánto depende una unidad de las partes internas de otra.
 - **Por qué importa:** Piezas muy enlazadas hacen que un cambio se propague y que sea difícil reemplazar partes.
-- **Tu resultado:** **16** unidad(es) con acoplamiento alto _(máximo 2 por 1000 LOC)_
+- **Tu resultado:** **19** unidad(es) con acoplamiento alto _(máximo 2 por 1000 LOC)_
 - **Para investigar la causa:**
     - ¿Las piezas se conocen en detalle entre sí (acceden a campos o estructuras internas)?
     - ¿El acceso a datos ocurre desde lugares que no son los responsables?
@@ -157,7 +157,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Porcentaje de líneas de código ejecutadas por la suite de tests (cobertura real, no cantidad de archivos de test).
 - **Por qué importa:** Un test que existe pero no ejecuta el código no protege de nada: la cobertura muestra qué partes quedan sin verificar.
-- **Tu resultado:** **67.6%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.0%, backend-service2 84.4%) _(mínimo 80% de líneas)_
+- **Tu resultado:** **70.5%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.2%, backend-service2 83.2%) _(mínimo 80% de líneas)_
 - **Para investigar la causa:**
     - ¿Qué módulos o ramas del sistema nunca se ejecutan en los tests?
     - ¿Los tests prueban el camino principal y los errores, o solo el caso feliz?
@@ -171,20 +171,20 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 ## 5. Qué falta para aprobar
 
-Criterios que hoy están en rojo y qué habría que cambiar para alcanzar el nivel de aprobación (perfil `exigente`):
+Criterios que hoy están en rojo y, para cada uno, una explicación breve de **cómo corregirlo** hasta alcanzar el nivel de aprobación (perfil `exigente`):
 
-| Criterio | Resultado actual | Meta | Qué arreglar |
+| Criterio | Resultado actual | Meta | Cómo corregirlo |
 |---|---|---|---|
-| Índice de calidad de servicios (indice) | índice **6/100** | mínimo 60 | Subir el índice a ≥60 corrigiendo primero las señales de más peso: duplicación, secretos, SQL y capas. |
-| Secretos hardcodeados (SEC) | **1** secreto(s) hardcodeado(s) | máximo 0 | Leer credenciales de variables de entorno o del gestor de secretos y sacarlas del código; 0 casos. |
-| Depuración olvidada (DBG) | **5** mensaje(s) de depuración olvidado(s) | máximo 0 | Quitar `console.log`/`print`/`debugger` del código de producción; 0 casos. |
-| Componente demasiado grande (BigC) | **3** componente(s) demasiado grande(s) | máximo 1 | Dividir el componente por responsabilidad en subcomponentes; ≤1 componente grande. |
-| Baja cohesión (Coh) | **2** unidad(es) con baja cohesión | máximo 0 | Separar en unidades con una sola responsabilidad; 0 clases con baja cohesión. |
-| Complejidad alta (Compl) | **47** bloque(s) de complejidad alta | máximo 5 por 1000 LOC (tenés 6812 LOC) | Extraer ramas y reglas a funciones con nombre propio; ≤5 bloques por 1000 LOC. |
-| Acoplamiento alto (Acop) | **16** unidad(es) con acoplamiento alto | máximo 2 por 1000 LOC | Reducir dependencias directas entre unidades; ≤2 por 1000 LOC. |
-| Cobertura de tests (Cob) | **67.6%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.0%, backend-service2 84.4%) | mínimo 80% de líneas | Publicar cobertura (o correr la suite con coverage) y cubrir ≥80% de líneas. |
+| Índice de calidad de servicios (indice) | índice **5/100** | mínimo 60 | El índice es un resumen: sube al corregir los criterios en rojo. Empezá por los de más peso (duplicación ≤15%, SEC y SQL en 0, capas ≥2) y volvé a medir; la meta es ≥60. |
+| Secretos hardcodeados (SEC) | **1** secreto(s) hardcodeado(s) | máximo 0 | Sacá el valor del código y leelo de una variable de entorno (`.env` no versionado) o del gestor de secretos; si la credencial estuvo publicada, rotala. Meta: 0 casos. |
+| Depuración olvidada (DBG) | **20** mensaje(s) de depuración olvidado(s) | máximo 0 | Borrá `console.log`/`print`/`debugger` del código de producción. Si necesitás registro, usá el logger del proyecto con el nivel adecuado. Meta: 0 casos. |
+| Componente demasiado grande (BigC) | **3** componente(s) demasiado grande(s) | máximo 1 | Dividí el componente por responsabilidad en subcomponentes (render, estado, acceso a datos) y dejá el original sólo como orquestador. Meta: ≤1 componente grande. |
+| Baja cohesión (Coh) | **4** unidad(es) con baja cohesión | máximo 0 | Separá la clase en unidades con una sola responsabilidad: si los métodos cambian por motivos distintos, son clases distintas. Meta: 0 clases con baja cohesión. |
+| Complejidad alta (Compl) | **61** bloque(s) de complejidad alta | máximo 5 por 1000 LOC (tenés 8175 LOC) | Extraé condiciones y ramas a funciones con nombre propio, usá retornos tempranos y evitá anidar `if`/`switch`. Meta: ≤5 bloques por 1000 LOC. |
+| Acoplamiento alto (Acop) | **19** unidad(es) con acoplamiento alto | máximo 2 por 1000 LOC | Hacé que cada unidad dependa de una interfaz o de un módulo de servicio, no de los detalles internos de otra; evitá acceder a campos ajenos. Meta: ≤2 por 1000 LOC. |
+| Cobertura de tests (Cob) | **70.5%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.2%, backend-service2 83.2%) | mínimo 80% de líneas | Agregá o ampliá tests que ejecuten los módulos sin cubrir (camino principal y errores) y publicá el artefacto (`coverage/lcov.info`, `coverage-summary.json`, `coverage.xml` o `coverage.json`) o corré la suite con coverage. Meta: ≥80% de líneas. |
 
-> Empezá por las señales de seguridad (**SEC**, **SQL**) y por la **duplicación**: son las que más pesan en el índice y las más rápidas de verificar a ojo.
+> Empezá por las señales de seguridad (**SEC**, **SQL**) y por la **duplicación**: son las que más pesan en el índice y las más rápidas de verificar a ojo. Después de corregir, volvé a correr la medición: el semáforo se recalcula sobre `main`.
 
 ## 6. Anexo: dónde mirar
 
@@ -193,19 +193,22 @@ Archivos donde el análisis encontró cada señal en rojo (sin número de línea
 **Secretos hardcodeados (SEC)** — 1 archivo(s):
 - `backend-service1/app/core/constants.py`
 
-**Depuración olvidada (DBG)** — 1 archivo(s):
+**Depuración olvidada (DBG)** — 2 archivo(s):
 - `backend-service2/scripts/demo_engine.py`
+- `backend-service2/scripts/demo_ufw.py`
 
 **Componente demasiado grande (BigC)** — 3 archivo(s):
 - `frontend-admin/src/components/ui.jsx`
 - `frontend-admin/src/pages/DashboardPage.jsx`
 - `frontend-admin/src/pages/ResetPasswordPage.jsx`
 
-**Baja cohesión (Coh)** — 2 archivo(s):
+**Baja cohesión (Coh)** — 4 archivo(s):
 - `backend-service1/app/core/config.py`
 - `backend-service1/app/schemas/auth.py`
+- `backend-service2/app/monitor.py`
+- `backend-service2/app/ufw.py`
 
-**Complejidad alta (Compl)** — 26 archivo(s):
+**Complejidad alta (Compl)** — 34 archivo(s):
 - `backend-service1/app/api/v1/endpoints/banned_ips.py`
 - `backend-service1/app/core/config.py`
 - `backend-service1/app/core/security.py`
@@ -213,18 +216,26 @@ Archivos donde el análisis encontró cada señal en rojo (sin número de línea
 - `backend-service1/app/services/mail_service.py`
 - `backend-service1/tests/conftest.py`
 - `backend-service1/tests/test_auth_api.py`
+- `backend-service1/tests/test_banned_ips_api.py`
 - `backend-service1/tests/test_config_api.py`
 - `backend-service1/tests/test_security.py`
+- `backend-service2/app/bans.py`
 - `backend-service2/app/engine.py`
 - `backend-service2/app/main.py`
 - `backend-service2/app/monitor.py`
 - `backend-service2/app/parser.py`
 - `backend-service2/app/redis_config.py`
+- `backend-service2/app/runner.py`
 - `backend-service2/app/tailer.py`
+- `backend-service2/app/ufw.py`
+- `backend-service2/app/unban_worker.py`
+- `backend-service2/scripts/demo_ufw.py`
+- `backend-service2/tests/test_bans.py`
 - `backend-service2/tests/test_engine.py`
 - `backend-service2/tests/test_health.py`
 - `backend-service2/tests/test_monitor.py`
 - `backend-service2/tests/test_parser.py`
+- `backend-service2/tests/test_unban_worker.py`
 - `frontend-admin/src/context/AuthProvider.jsx`
 - `frontend-admin/src/hooks/useBanConfig.js`
 - `frontend-admin/src/pages/ForgotPasswordPage.jsx`
@@ -233,19 +244,22 @@ Archivos donde el análisis encontró cada señal en rojo (sin número de línea
 - `frontend-admin/src/pages/SetupPage.jsx`
 - `frontend-admin/src/utils/validation.js`
 
-**Acoplamiento alto (Acop)** — 12 archivo(s):
+**Acoplamiento alto (Acop)** — 15 archivo(s):
 - `backend-service1/app/core/config.py`
 - `backend-service1/app/schemas/auth.py`
 - `backend-service1/app/schemas/config.py`
 - `backend-service1/app/services/auth_service.py`
 - `backend-service1/app/services/config_service.py`
 - `backend-service1/app/services/mail_service.py`
+- `backend-service2/app/bans.py`
 - `backend-service2/app/config.py`
 - `backend-service2/app/engine.py`
 - `backend-service2/app/models.py`
 - `backend-service2/app/monitor.py`
 - `backend-service2/app/redis_config.py`
 - `backend-service2/app/tailer.py`
+- `backend-service2/app/ufw.py`
+- `backend-service2/app/unban_worker.py`
 
 ---
 _Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo señalado y el criterio en `CRITERIOS-CALIDAD.md`._
