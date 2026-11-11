@@ -291,6 +291,40 @@ desarrollo sin privilegios:
 UFW_DRY_RUN=true PYTHONPATH=../backend-service1/.pylibs python -m app
 ```
 
+### Leer `/var/log/auth.log` sin sudo (desarrollo)
+
+En Debian/Ubuntu `/var/log/auth.log` pertenece a `syslog:adm` y un usuario
+normal no puede abrirlo. El motor falla al arrancar si `SSH_LOG_PATH` apunta a
+ese archivo y no hay permisos. Hay dos alternativas:
+
+1. **Dar acceso al usuario** (solución permanente, requiere sudo):
+
+   ```bash
+   sudo usermod -aG adm "$USER"
+   # Cerrar sesión y volver a entrar para que el grupo se aplique
+   ```
+
+2. **Puente con Docker** (sin sudo, si el usuario está en el grupo `docker`):
+   el script transmite el auth log del host a un archivo legible por el
+   usuario, sin modificar propietarios ni permisos del sistema.
+
+   ```bash
+   ./scripts/stream-auth-log.sh
+   # Imprime la ruta del espejo, por ejemplo:
+   # /home/<usuario>/.local/state/bansystem/auth.log
+   SSH_LOG_PATH="$HOME/.local/state/bansystem/auth.log" \
+     LOG_READ_FROM_START=true \
+     UFW_DRY_RUN=true \
+     PYTHONPATH=../backend-service1/.pylibs python -m app
+   ```
+
+   El contenedor `bannedbyabrejeet_authlog_bridge` sigue el archivo incluso
+   después de una rotación de `logrotate`. Para detenerlo:
+
+   ```bash
+   docker rm -f bannedbyabrejeet_authlog_bridge
+   ```
+
 Variables de la integración:
 
 | Variable | Por defecto | Descripción |

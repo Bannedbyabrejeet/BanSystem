@@ -3,6 +3,7 @@
 Expone bajo ``/telemetry``:
 
 * ``GET /logs`` — eventos SSH parseados, con filtros y paginación.
+* ``DELETE /logs`` — vacía los eventos retenidos para el visor.
 * ``GET /bans`` — IPs baneadas en este momento.
 * ``GET /history`` — historial de baneos/desbaneos.
 * ``DELETE /bans/<ip>`` — encola una orden de desbaneo manual.
@@ -112,6 +113,24 @@ def list_logs():
             },
             "limit": limit,
             "offset": offset,
+        }
+    )
+
+
+@telemetry.delete("/logs")
+@_require_auth
+def clear_logs():
+    """``DELETE /telemetry/logs`` — vacía los eventos retenidos del visor."""
+    try:
+        deleted = _store().clear_events()
+    except RedisError:
+        current_app.logger.exception("No se pudieron limpiar los eventos SSH")
+        return _error("No se pudieron limpiar los logs", 503)
+
+    return jsonify(
+        {
+            "message": "Logs eliminados",
+            "deleted": deleted,
         }
     )
 

@@ -90,6 +90,18 @@ def test_list_events_filters_and_reports_stats(redis_client: Redis) -> None:
     assert page_two.items[0]["timestamp"] == 1_001
 
 
+def test_clear_events_returns_count_and_empties_the_list(
+    redis_client: Redis,
+) -> None:
+    store = TelemetryStore(redis_client)
+    store.record_event(make_event(timestamp=1_000))
+    store.record_event(make_event(timestamp=1_001))
+
+    assert store.clear_events() == 2
+    assert redis_client.llen(SSH_EVENTS) == 0
+    assert store.clear_events() == 0
+
+
 def test_list_bans_sorts_by_banned_at(redis_client: Redis) -> None:
     redis_client.hset(
         IPS_BANNED,

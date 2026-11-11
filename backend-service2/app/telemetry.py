@@ -147,3 +147,11 @@ class TelemetryStore:
     def count_events(self) -> int:
         """Cantidad actual de eventos retenidos (para healthcheck)."""
         return int(self.redis.llen(SSH_EVENTS))
+
+    def clear_events(self) -> int:
+        """Elimina todos los eventos SSH retenidos y devuelve cuántos había."""
+        pipe = self.redis.pipeline(transaction=True)
+        pipe.llen(SSH_EVENTS)
+        pipe.delete(SSH_EVENTS)
+        deleted, _ = pipe.execute()
+        return int(deleted)

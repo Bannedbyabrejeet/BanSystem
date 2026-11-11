@@ -1,7 +1,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 
-import { fetchLogs } from '../api/client';
+import { clearLogs, fetchLogs } from '../api/client';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 import { MESSAGES } from '../constants/messages';
 import { formatDateTime, outcomeLabel } from '../utils/format';
 
@@ -10,9 +11,12 @@ const items = ref([]);
 const stats = ref({ total: 0, success: 0, failed: 0 });
 const loading = ref(false);
 const error = ref('');
+const success = ref('');
 const page = ref(0);
 const limit = 25;
 const autoRefresh = ref(true);
+const clearOpen = ref(false);
+const clearBusy = ref(false);
 
 let timer = null;
 let requestId = 0;
@@ -51,6 +55,7 @@ async function load({ silent = false } = {}) {
 }
 
 function applyFilters() {
+  success.value = '';
   page.value = 0;
   load();
 }
@@ -59,8 +64,34 @@ function resetFilters() {
   filters.outcome = '';
   filters.ip = '';
   filters.username = '';
+  success.value = '';
   page.value = 0;
   load();
+}
+
+function askClearLogs() {
+  error.value = '';
+  success.value = '';
+  clearOpen.value = true;
+}
+
+async function confirmClearLogs() {
+  clearBusy.value = true;
+  error.value = '';
+  try {
+    const data = await clearLogs();
+    // Invalida cualquier carga en vuelo para que no reponga datos ya borrados.
+    requestId += 1;
+    items.value = [];
+    stats.value = { total: 0, success: 0, failed: 0 };
+    page.value = 0;
+    success.value = `${MESSAGES.LOGS_CLEARED} (${data.deleted} eliminados)`;
+    clearOpen.value = false;
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    clearBusy.value = false;
+  }
 }
 
 function goPrev() {
@@ -116,6 +147,9 @@ onBeforeUnmount(stopTimer);
         <button type="button" class="btn btn--secondary" :disabled="loading" @click="load()">
           {{ MESSAGES.REFRESH }}
         </button>
+        <button type="button" class="btn btn--danger" @click="askClearLogs">
+          Limpiar logs
+        </button>
       </div>
     </header>
 
@@ -156,11 +190,12 @@ onBeforeUnmount(stopTimer);
 
       <div class="filters__actions">
         <button type="submit" class="btn btn--primary">Filtrar</button>
-        <button type="button" class="btn btn--ghost" @click="resetFilters">Limpiar</button>
+        <button type="button" class="btn btn--ghost" @click="resetFilters">Limpiar filtros</button>
       </div>
     </form>
 
     <div v-if="error" class="alert alert--error" role="alert">{{ error }}</div>
+    <div v-if="success" class="alert alert--success" role="status">{{ success }}</div>
 
     <div class="table-card">
       <div class="table-card__header">
@@ -216,5 +251,15 @@ onBeforeUnmount(stopTimer);
         </button>
       </footer>
     </div>
+
+    <ConfirmDialog
+      :open="clearOpen"
+      title="Limpiar logs"
+      :message="MESSAGES.LOGS_CLEAR_CONFIRM"
+      confirm-label="Limpiar logs"
+      :busy="clearBusy"
+      @confirm="confirmClearLogs"
+      @cancel="clearOpen = false"
+    />
   </section>
 </template>

@@ -61,6 +61,34 @@ El proceso necesita poder ejecutar `ufw` (root o `sudo` sin contraseña). Para
 desarrollo sin privilegios, `UFW_DRY_RUN=true` registra los comandos sin
 tocar el firewall.
 
+### Permisos sobre el auth log
+
+En Debian/Ubuntu `/var/log/auth.log` pertenece a `syslog:adm`; un usuario
+normal recibe `Permission denied` al arrancar el motor. Opciones:
+
+1. Agregar el usuario al grupo `adm` y reiniciar la sesión:
+
+   ```bash
+   sudo usermod -aG adm "$USER"
+   ```
+
+2. Sin sudo (requiere pertenecer al grupo `docker`), usar el puente incluido
+   en la raíz del repositorio, que copia el log a un archivo legible:
+
+   ```bash
+   ./scripts/stream-auth-log.sh
+   SSH_LOG_PATH="$HOME/.local/state/bansystem/auth.log" \
+     LOG_READ_FROM_START=true \
+     UFW_DRY_RUN=true \
+     PYTHONPATH=../backend-service1/.pylibs python -m app
+   ```
+
+   Para detener el puente:
+
+   ```bash
+   docker rm -f bannedbyabrejeet_authlog_bridge
+   ```
+
 Variables propias:
 
 | Variable | Por defecto | Descripción |
@@ -126,6 +154,7 @@ Todas las rutas exigen el JWT del Servicio 1 en
 | Método | Ruta | Resultado |
 |---|---|---|
 | `GET` | `/telemetry/logs?limit=&offset=&outcome=&ip=&username=` | Eventos SSH paginados y contadores. |
+| `DELETE` | `/telemetry/logs` | Vacía `ssh:events` y devuelve cuántos eventos se eliminaron. |
 | `GET` | `/telemetry/bans` | IPs baneadas en este momento. |
 | `GET` | `/telemetry/history?limit=&offset=` | Historial de baneos/desbaneos. |
 | `DELETE` | `/telemetry/bans/<ip>` | Encola un `UNBAN` en `security:events:unban` (`202`). |

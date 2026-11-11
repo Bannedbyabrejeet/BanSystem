@@ -3,7 +3,9 @@
 Interfaz operativa de **Bannedbyabrejeet** para la Issue #9:
 
 - **US-03 / FRONT-04:** visor de logs SSH con fecha/hora, IP, usuario y
-  resultado, con diferenciación visual entre éxitos y fallos.
+  resultado, con diferenciación visual entre éxitos y fallos. Incluye
+  “Limpiar logs” (con confirmación) para vaciar los eventos almacenados y
+  “Limpiar filtros” para restablecer los criterios de búsqueda.
 - **US-06:** dos estados de IPs: “Baneadas en el momento” e “Historial de
   baneadas anteriormente”.
 - **US-07 / FRONT-05:** botón **Desbanear** en cada sanción activa, que envía
@@ -38,6 +40,7 @@ El frontend consume:
 |---|---|
 | `GET /api/v1/auth/me` | Servicio 1 (validar sesión) |
 | `GET /telemetry/logs` | Servicio 2 (eventos SSH) |
+| `DELETE /telemetry/logs` | Servicio 2 (vaciar eventos SSH) |
 | `GET /telemetry/bans` | Servicio 2 (sanciones activas) |
 | `GET /telemetry/history` | Servicio 2 (historial) |
 | `DELETE /telemetry/bans/<ip>` | Servicio 2 (encolar desbaneo) |

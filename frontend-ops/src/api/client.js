@@ -97,6 +97,11 @@ export function fetchLogs({ limit = 25, offset = 0, outcome = '', ip = '', usern
   return request({ method: 'GET', url: '/telemetry/logs', params });
 }
 
+/** Borra todos los eventos SSH retenidos por el Servicio 2. */
+export function clearLogs() {
+  return request({ method: 'DELETE', url: '/telemetry/logs' });
+}
+
 /** IPs baneadas en este momento. */
 export function fetchBans() {
   return request({ method: 'GET', url: '/telemetry/bans' });

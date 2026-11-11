@@ -166,6 +166,29 @@ def test_logs_supports_filters_and_pagination(
     assert invalid.status_code == 400
 
 
+def test_clear_logs_requires_auth(app) -> None:
+    response = app.test_client().delete("/telemetry/logs")
+
+    assert response.status_code == 401
+
+
+def test_clear_logs_empties_the_events(
+    app, auth_headers, redis_client: Redis
+) -> None:
+    seed_event(redis_client, timestamp=1_000)
+    seed_event(redis_client, timestamp=1_001)
+
+    response = app.test_client().delete("/telemetry/logs", headers=auth_headers)
+
+    assert response.status_code == 200
+    assert response.get_json()["deleted"] == 2
+    assert redis_client.llen(SSH_EVENTS) == 0
+
+    listing = app.test_client().get("/telemetry/logs", headers=auth_headers)
+    assert listing.status_code == 200
+    assert listing.get_json()["total"] == 0
+
+
 def test_bans_and_history_are_exposed(
     app, auth_headers, redis_client: Redis
 ) -> None:
