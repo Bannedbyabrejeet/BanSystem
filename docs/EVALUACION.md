@@ -3,7 +3,7 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-11-06.
+> Generado: 2026-11-11.
 
 ## 1. Veredicto
 
@@ -41,8 +41,8 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| SantiMulet | 10 | 43% | 23 d | 57% | **36** | No aprueba | Cumplimiento 43% (mín. 50%) |
-| manu_abrego_1913 | 5 | 22% | 61 d | 57% | **22** | No aprueba | Cumplimiento 22% (mín. 50%) |
+| SantiMulet | 10 | 43% | 23 d | 14% | **30** | No aprueba | Cumplimiento 43% (mín. 50%); Recencia 14% (mín. 50%) |
+| manu_abrego_1913 | 5 | 22% | 61 d | 14% | **16** | No aprueba | Cumplimiento 22% (mín. 50%); Recencia 14% (mín. 50%) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -187,13 +187,13 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 ## 6. Actividad en clase (miércoles y viernes)
 
-> Se consideran las **23 clases** del período (miércoles y viernes; Nov 4 y 6 quedan afuera porque el calendario las marca sin clase). `Commits` = commits de trabajo (no-merge); `Merges` = merges de PR (también son push). Los días sin actividad dicen **sin actividad**.
+> Se consideran las **23 clases** del período (miércoles y viernes, según `config/constancia.json`; feriados y semanas sin clase descontados). `Commits` = commits de trabajo (no-merge); `Merges` = merges de PR (también son push). Los días sin actividad dicen **sin actividad**.
 
 ### manu_abrego_1913
 
 **10/23 clases con actividad** · 11 commits · 9 merges
 
-| Fecha | Marca | Repositorios | Commits / merges |
+| Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
 | 2026-08-14 | **Sí** | BanSystem | 1 / 0 |
 | 2026-08-19 | No | sin actividad | 0 / 0 |
@@ -223,7 +223,7 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 **12/23 clases con actividad** · 22 commits · 9 merges
 
-| Fecha | Marca | Repositorios | Commits / merges |
+| Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
 | 2026-08-14 | **Sí** | BanSystem | 1 / 0 |
 | 2026-08-19 | No | sin actividad | 0 / 0 |
