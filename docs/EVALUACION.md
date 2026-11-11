@@ -41,8 +41,8 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| SantiMulet | 10 | 43% | 23 d | 14% | **30** | No aprueba | Cumplimiento 43% (mín. 50%); Recencia 14% (mín. 50%) |
-| manu_abrego_1913 | 5 | 22% | 61 d | 14% | **16** | No aprueba | Cumplimiento 22% (mín. 50%); Recencia 14% (mín. 50%) |
+| SantiMulet | 11 | 43% | 23 d | 100% | **42** | No aprueba | Cumplimiento 43% (mín. 50%) |
+| manu_abrego_1913 | 6 | 23% | 61 d | 100% | **29** | No aprueba | Cumplimiento 23% (mín. 50%) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -187,11 +187,11 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 ## 6. Actividad en clase (miércoles y viernes)
 
-> Se consideran las **23 clases** del período (miércoles y viernes, según `config/constancia.json`; feriados y semanas sin clase descontados). `Commits` = commits de trabajo (no-merge); `Merges` = merges de PR (también son push). Los días sin actividad dicen **sin actividad**.
+> Se consideran las **26 clases** del período (miércoles y viernes, según `config/constancia.json`; feriados y semanas sin clase descontados). `Commits` = commits de trabajo (no-merge); `Merges` = merges de PR (también son push). Los días sin actividad dicen **sin actividad**.
 
 ### manu_abrego_1913
 
-**10/23 clases con actividad** · 11 commits · 9 merges
+**11/26 clases con actividad** · 12 commits · 10 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -218,10 +218,13 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 | 2026-10-23 | No | sin actividad | 0 / 0 |
 | 2026-10-28 | **Sí** | beta | 2 / 1 |
 | 2026-10-30 | **Sí** | beta | 1 / 2 |
+| 2026-11-04 | No | sin actividad | 0 / 0 |
+| 2026-11-06 | No | sin actividad | 0 / 0 |
+| 2026-11-11 | **Sí** | beta | 1 / 1 |
 
 ### SantiMulet
 
-**12/23 clases con actividad** · 22 commits · 9 merges
+**13/26 clases con actividad** · 23 commits · 10 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -248,6 +251,9 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 | 2026-10-23 | No | sin actividad | 0 / 0 |
 | 2026-10-28 | **Sí** | BanSystem | 3 / 2 |
 | 2026-10-30 | **Sí** | BanSystem | 2 / 1 |
+| 2026-11-04 | No | sin actividad | 0 / 0 |
+| 2026-11-06 | No | sin actividad | 0 / 0 |
+| 2026-11-11 | **Sí** | BanSystem | 1 / 1 |
 
 ## 7. Anexo: dónde mirar
 
