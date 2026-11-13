@@ -54,7 +54,28 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(form);
-      // Vuelve a la ruta que el guardia protegido memorizó, o al dashboard.
+      // Vuelve a la ruta solicitada por el Frontend B (?redirect=/logs/),
+      // a la que memorizó el guardia, o al dashboard.
+      const requested = new URLSearchParams(location.search).get('redirect');
+      let safeRedirect = null;
+      if (requested) {
+        try {
+          const target = new URL(requested, window.location.origin);
+          if (target.origin === window.location.origin) {
+            safeRedirect = `${target.pathname}${target.search}${target.hash}`;
+          }
+        } catch {
+          safeRedirect = null;
+        }
+      }
+
+      if (safeRedirect) {
+        // `/logs/` pertenece al Frontend B: hace falta una carga completa para
+        // que el proxy de Vite entregue la aplicación Vue.
+        window.location.assign(safeRedirect);
+        return;
+      }
+
       const destination = location.state?.from?.pathname ?? '/dashboard';
       navigate(destination, { replace: true });
     } catch (error) {

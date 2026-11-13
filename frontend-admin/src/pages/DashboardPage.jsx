@@ -5,8 +5,10 @@
  * - Sesión activa y cierre de sesión.
  * - US-02 / US-09: umbral de intentos, tiempo de baneo y ventana de tolerancia.
  * - US-08: alta y baja de IPs/subredes de la lista blanca.
+ * - Enlace a la consola operativa Vue (logs, IPs e historial, Issue #9).
  *
- * Las secciones de IPs baneadas y logs SSH (issues #7 y #8) siguen pendientes.
+ * La vista integrada de IPs dentro de este dashboard React queda como
+ * pendiente opcional; el flujo completo ya existe en el Frontend B.
  */
 
 import { Link, useNavigate } from 'react-router-dom';
@@ -21,13 +23,9 @@ import useBanConfig from '../hooks/useBanConfig';
 const PENDIENTES = [
   {
     issue: '#7',
-    titulo: 'IPs baneadas e historial',
-    detalle: 'Listado de sanciones activas, historial y desbaneo manual.',
-  },
-  {
-    issue: '#8',
-    titulo: 'Visor de logs SSH',
-    detalle: 'Eventos de acceso exitosos y fallidos en formato legible.',
+    titulo: 'Vista integrada de IPs en este panel',
+    detalle:
+      'La consola operativa ya muestra las sanciones activas, el historial y el desbaneo manual.',
   },
 ];
 
@@ -83,6 +81,17 @@ export default function DashboardPage() {
           <Button type="button" variant="secondary" onClick={handleLogout}>
             Cerrar sesión
           </Button>
+        </div>
+
+        <div className="dashboard__panel dashboard__session">
+          <h2 className="dashboard__subtitle">Consola operativa</h2>
+          <p className="dashboard__description">
+            Visor de logs SSH en vivo, estado de las IPs baneadas e historial de
+            sanciones con desbaneo manual.
+          </p>
+          <a className="btn btn--primary" href="/logs/">
+            Abrir consola operativa
+          </a>
         </div>
 
         <Alert message={success} type="success" />

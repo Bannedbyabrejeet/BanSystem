@@ -10,7 +10,7 @@ consumidor del stream `security:events:unban`.
 
 | Criterio | Implementación | Prueba |
 |---|---|---|
-| Al alcanzar `maxretry`, el Servicio 2 ejecuta `ufw deny from <IP> to any port 22` | `app/ufw.py` + `BanService.ban` invocados desde `LogMonitor._apply_ban` | `tests/test_ufw.py`, `tests/test_bans.py::test_ban_blocks_ufw_and_persists_state`, `tests/test_monitor.py::test_monitor_applies_ufw_ban_when_threshold_is_reached` |
+| Al alcanzar `maxretry`, el Servicio 2 ejecuta `ufw insert 1 deny from <IP> to any port 22` | `app/ufw.py` + `BanService.ban` invocados desde `LogMonitor._apply_ban` | `tests/test_ufw.py`, `tests/test_bans.py::test_ban_blocks_ufw_and_persists_state`, `tests/test_monitor.py::test_monitor_applies_ufw_ban_when_threshold_is_reached` |
 | La IP queda registrada en `ips:banned` con timestamps y duración | `BanService._persist_ban` escribe hash, historial y `bans:expirations` en una transacción | `tests/test_bans.py::test_ban_blocks_ufw_and_persists_state` |
 | Transcurrido `bantime`, se elimina la regla UFW automáticamente (US-05) | `BanService.expire_due` + `ZRANGEBYSCORE bans:expirations -inf now`; el monitor lo ejecuta cada `BAN_MAINTENANCE_INTERVAL` | `tests/test_bans.py::test_expire_due_unblocks_only_after_bantime`, `tests/test_bans.py::test_failed_expiration_keeps_the_ban_for_a_retry` |
 | El estado pasa de "Baneada" a "Historial" | `BanService.unban` agrega `action="unbanned"` y `unban_reason="timeout"` a `ips:history` | `tests/test_bans.py::test_expire_due_unblocks_only_after_bantime` |
@@ -209,6 +209,30 @@ redis-cli HEXISTS ips:banned 203.0.113.42  # 0
 redis-cli ZSCORE bans:expirations 203.0.113.42  # nil
 ```
 
+### 4.6. Corrección detectada en la prueba con una PC remota
+
+En una prueba real desde `192.168.220.123` el sistema registró la sanción en
+Redis y agregó la regla a `/etc/ufw/user.rules`, pero la PC seguía conectándose
+por SSH. La inspección del kernel mostró el problema de prioridad:
+
+```text
+-A ufw-user-input -p tcp -m tcp --dport 22 -j ACCEPT
+-A ufw-user-input -s 192.168.220.123/32 -p tcp -m tcp --dport 22 -j DROP
+-A ufw-user-input -s 192.168.220.123/32 -p udp -m udp --dport 22 -j DROP
+```
+
+UFW evalúa en orden: el `allow 22/tcp` general se agregó antes y aceptaba el
+tráfico de la IP atacante; la regla `deny` posterior nunca se alcanzaba. La
+corrección fue insertar la denegación al principio:
+
+```text
+ufw insert 1 deny from <IP> to any port 22
+```
+
+El desbaneo sigue usando `ufw delete deny from <IP> to any port 22`. Con esta
+corrección la regla queda antes del allow general y el bloqueo es efectivo sin
+cerrar el puerto SSH para el resto de los clientes.
+
 ## 5. Evidencia del desbaneo manual (US-07)
 
 Flujo:
@@ -258,6 +282,10 @@ Resultado:
   kernel. Si está inactivo, `ufw deny` las escribe en `/etc/ufw/user.rules`
   pero `ufw status` no las muestra como activas. En la prueba real se
   habilitó UFW permitiendo antes el puerto SSH.
+- El orden de las reglas importa: con un `ufw allow 22/tcp` general, un
+  `ufw deny ...` agregado al final nunca se evalúa. Por eso el bloqueo usa
+  `ufw insert 1 deny ...`. Si se modifica manualmente el orden de UFW, hay
+  que volver a insertar la denegación al principio.
 - El baneo manual del Servicio 1 (`POST /api/v1/banned-ips/`) registra la
   sanción en Redis y el Servicio 2 la reconcilia para su expiración, pero el
   contrato actual solo define el evento `UNBAN`; no se publica un evento

@@ -1,24 +1,26 @@
-"""Aplicación Flask mínima del Servicio 2 (healthcheck).
+"""Aplicación Flask del Servicio 2: healthcheck y telemetría (Issue #9).
 
 El motor de logs se ejecuta en su propio proceso con ``python -m app`` para
 que un reinicio del servidor web no interrumpa la lectura continua. Flask
-queda como fachada operativa del servicio y base para el visor de logs de
-una issue posterior.
+expone el healthcheck y la API ``/telemetry`` que consume el Frontend B.
 """
 
 from __future__ import annotations
 
-from flask import Flask, jsonify
+from flask import Flask
 
+from app.api import telemetry
 from app.config import Settings, get_settings
 from app.logging_config import configure_logging
 from app.redis_client import create_redis_client, ping_redis
+from app.telemetry import TelemetryStore
 
 
 def create_app(
     settings: Settings | None = None,
     *,
     redis_client=None,
+    telemetry_store: TelemetryStore | None = None,
 ) -> Flask:
     """Fábrica de la aplicación Flask (inyectable en pruebas)."""
     active_settings = settings or get_settings()
@@ -28,6 +30,11 @@ def create_app(
     app.config["SETTINGS"] = active_settings
     client = redis_client or create_redis_client(active_settings)
     app.extensions["redis"] = client
+    store = telemetry_store or TelemetryStore(
+        client, event_limit=active_settings.ssh_events_limit
+    )
+    app.extensions["telemetry"] = store
+    app.register_blueprint(telemetry)
 
     @app.get("/health")
     def health() -> tuple[dict[str, object], int]:

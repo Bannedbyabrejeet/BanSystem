@@ -6,11 +6,12 @@
 3. [Parámetros de Configuración del Firewall](#2-parámetros-de-configuración-del-firewall)
 4. [Lista Blanca (Whitelist)](#3-lista-blanca-whitelist)
 5. [Contador de Intentos Fallidos (Sliding Window)](#4-contador-de-intentos-fallidos-sliding-window)
-6. [IPs Baneadas Activas](#5-ips-baneadas-activas)
-7. [Vencimiento de Baneos](#51-vencimiento-de-baneos-bans-expirations)
-8. [Historial de IPs](#6-historial-de-ips)
-9. [Broker de Desbaneo Manual (Redis Streams)](#7-broker-de-desbaneo-manual-redis-streams)
-10. [Resumen de TTLs y Políticas](#resumen-de-ttls-y-políticas)
+6. [Eventos SSH para el Visor](#41-eventos-ssh-para-el-visor-sshevents)
+7. [IPs Baneadas Activas](#5-ips-baneadas-activas)
+8. [Vencimiento de Baneos](#51-vencimiento-de-baneos-bans-expirations)
+9. [Historial de IPs](#6-historial-de-ips)
+10. [Broker de Desbaneo Manual (Redis Streams)](#7-broker-de-desbaneo-manual-redis-streams)
+11. [Resumen de TTLs y Políticas](#resumen-de-ttls-y-políticas)
 
 ---
 
@@ -22,6 +23,7 @@
 | `reset_token:*` | String | Tokens opacos de recuperación de contraseña | Servicio 1 (FastAPI) |
 | `config:*` | Hash / Set | Parámetros y whitelist | Servicio 1 + Servicio 2 |
 | `failed:<IP>` | Sorted Set | Contador de intentos fallidos | Servicio 2 (Flask) |
+| `ssh:events` | List | Eventos SSH parseados para el visor | Servicio 2 |
 | `ips:banned` | Hash | IPs baneadas activas | Servicio 1 + Servicio 2 |
 | `bans:expirations` | Sorted Set | Vencimiento de cada baneo | Servicio 2 |
 | `ips:history` | List | Historial de auditoría | Servicio 1 + Servicio 2 |
@@ -308,6 +310,35 @@ r.expire(key, findtime)
 # Limpieza periódica de eventos fuera de ventana
 r.zremrangebyscore(key, '-inf', window_start)
 ```
+
+### 4.1. Eventos SSH para el Visor (`ssh:events`)
+
+### Clave
+```
+ssh:events
+```
+
+### Tipo
+**List** de strings JSON. El motor hace `LPUSH` por cada evento parseado y
+`LTRIM 0 1999` (configurable con `SSH_EVENTS_LIMIT`). Los eventos más
+recientes quedan al principio.
+
+### Campos
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `timestamp` | Integer | Timestamp UNIX del evento en el log. |
+| `received_at` | Integer | Cuándo lo procesó el Servicio 2. |
+| `ip` | String | IP de origen normalizada. |
+| `username` | String / null | Usuario SSH. |
+| `outcome` | String | `success` o `failed`. |
+| `event_type` | String | `failed_password`, `accepted_publickey`, `invalid_user`, etc. |
+| `raw_line` | String | Línea original para auditoría. |
+| `countable` | Boolean | `false` para líneas auxiliares que no suman al umbral. |
+| `port` | Integer / null | Puerto de origen. |
+
+El Frontend B consume estos datos mediante `GET /telemetry/logs` del Servicio
+2. El endpoint aplica filtros por resultado, IP y usuario, y devuelve los
+contadores `total`, `success` y `failed` del conjunto filtrado.
 
 ---
 
@@ -631,6 +662,7 @@ messages = await r.xreadgroup(
 | `config:settings` | Hash | Ninguno | Persistente | Servicio 1 |
 | `config:whitelist` | Set | Ninguno | Persistente | Servicio 1 + 2 |
 | `failed:<IP>` | ZSET | `findtime` segundos | Auto-expira | Servicio 2 |
+| `ssh:events` | List | Ninguno | `LTRIM` a `SSH_EVENTS_LIMIT` (2000) | Servicio 2 |
 | `ips:banned` | Hash | Ninguno (sin TTL de campo) | Expiración vía `bans:expirations` | Servicio 1 + 2 |
 | `bans:expirations` | ZSET | Ninguno | Worker de expiración del Servicio 2 | Servicio 2 |
 | `ips:history` | List | Sin límite (LTRIM a 1000) | Retención acotada | Servicio 1 + 2 |

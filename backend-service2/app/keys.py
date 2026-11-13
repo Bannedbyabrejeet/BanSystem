@@ -7,6 +7,10 @@ from __future__ import annotations
 
 from typing import Final
 
+#: Credenciales del administrador (string JSON) escritas por el Servicio 1.
+ADMIN_CREDENTIALS: Final[str] = "admin:credentials"
+#: Lista de eventos SSH parseados para el visor del Frontend B.
+SSH_EVENTS: Final[str] = "ssh:events"
 #: Hash con ``maxretry``, ``bantime`` y ``findtime`` (minutos).
 CONFIG_SETTINGS: Final[str] = "config:settings"
 #: Set con IPs y redes CIDR exentas de bloqueo.

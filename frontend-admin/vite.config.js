@@ -24,6 +24,18 @@ export default defineConfig({
         target: process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
+      // Frontend B (Vue) servido bajo el mismo origen para compartir el
+      // token de sessionStorage (ADR 001).
+      '/logs': {
+        target: process.env.VITE_OPS_PROXY_TARGET || 'http://127.0.0.1:3001',
+        changeOrigin: true,
+        ws: true,
+      },
+      // API de telemetría del Servicio 2 (Flask).
+      '/telemetry': {
+        target: process.env.VITE_TELEMETRY_PROXY_TARGET || 'http://127.0.0.1:5000',
+        changeOrigin: true,
+      },
     },
   },
   preview: {

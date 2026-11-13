@@ -8,8 +8,14 @@ manipulada no pueda inyectar comandos.
 
 Comandos generados (los mismos que documenta el enunciado):
 
-* Bloqueo: ``ufw deny from <IP> to any port 22``
+* Bloqueo: ``ufw insert 1 deny from <IP> to any port 22``
 * Desbloqueo: ``ufw delete deny from <IP> to any port 22``
+
+La regla se **inserta al principio** (``insert 1``) porque UFW evalúa las
+reglas en orden. Si existe un ``ufw allow 22/tcp`` general, un ``ufw deny``
+agregado al final nunca se alcanzaría y la IP seguiría conectándose. Al
+insertar la denegación antes del allow, el bloqueo es efectivo sin cerrar el
+puerto SSH para el resto de las direcciones.
 
 En desarrollo se puede activar ``UFW_DRY_RUN=true`` para ver los comandos
 sin modificar el firewall.
@@ -84,8 +90,13 @@ class UfwExecutor:
     # API pública
     # ------------------------------------------------------------------
     def block(self, ip: str) -> UfwCommandResult:
-        """Agrega ``deny from <IP> to any port <ssh_port>``."""
-        return self._execute(self._rule("deny", ip))
+        """Inserta ``deny from <IP> to any port <ssh_port>`` al principio.
+
+        ``insert 1`` garantiza que la denegación se evalúe antes que un
+        ``allow 22/tcp`` general, que de lo contrario aceptaría el tráfico de
+        la IP atacante antes de llegar a la regla de bloqueo.
+        """
+        return self._execute(self._rule("insert 1 deny", ip))
 
     def unblock(self, ip: str) -> UfwCommandResult:
         """Elimina la regla de bloqueo de la IP.

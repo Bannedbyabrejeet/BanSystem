@@ -8,7 +8,13 @@ from redis import Redis
 
 from app.bans import BanService
 from app.engine import SecurityEngine
-from app.keys import CONFIG_SETTINGS, CONFIG_WHITELIST, IPS_BANNED, failed_attempts_key
+from app.keys import (
+    CONFIG_SETTINGS,
+    CONFIG_WHITELIST,
+    IPS_BANNED,
+    SSH_EVENTS,
+    failed_attempts_key,
+)
 from app.models import EngineAction
 from app.monitor import LogMonitor
 from app.parser import SSHParser
@@ -45,6 +51,7 @@ def test_monitor_processes_file_lines_and_applies_config(
     )
     first = monitor.process_available()
     assert [decision.action for decision in first] == [EngineAction.COUNTED]
+    assert redis_client.llen(SSH_EVENTS) == 1
 
     append(
         path,
@@ -55,6 +62,7 @@ def test_monitor_processes_file_lines_and_applies_config(
     assert [decision.action for decision in second] == [EngineAction.BAN_REQUIRED]
     assert second[0].attempts_in_window == 2
     assert redis_client.zcard(failed_attempts_key("203.0.113.42")) == 2
+    assert redis_client.llen(SSH_EVENTS) == 2
 
     # Whitelist y éxito no tocan el contador de la IP atacante.
     append(
@@ -70,6 +78,7 @@ def test_monitor_processes_file_lines_and_applies_config(
         EngineAction.SUCCESS,
     ]
     assert redis_client.zcard(failed_attempts_key("203.0.113.42")) == 2
+    assert redis_client.llen(SSH_EVENTS) == 4
 
 
 def test_monitor_ignores_non_ssh_lines(tmp_path: Path, redis_client: Redis) -> None:

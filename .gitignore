@@ -3,11 +3,14 @@
 env
 *.local
 
-# --- Node / Frontend A ---
+# --- Node / Frontends ---
 node_modules/
 frontend-admin/build/
 frontend-admin/dist/
 frontend-admin/.vite/
+frontend-ops/build/
+frontend-ops/dist/
+frontend-ops/.vite/
 npm-debug.log*
 yarn-error.log*
 

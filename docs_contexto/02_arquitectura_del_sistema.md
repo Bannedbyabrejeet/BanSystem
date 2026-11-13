@@ -27,7 +27,7 @@ Este servicio es el núcleo algorítmico del sistema. Se ejecuta de forma contin
 
 - **Lector y parser de logs SSH**: Consumo continuo de los logs del sistema operativo (rutas como `/var/log/auth.log` o `/var/log/secure`) para detectar eventos de inicio de sesión.
 - **Motor de reglas y evaluación**: Leer los parámetros de Redis y evaluar si una IP supera los umbrales configurados.
-- **Integración con UFW**: Ejecutar comandos de firewall para bloquear/desbloquear IPs (`ufw deny from <IP>` y `ufw delete deny from <IP>`).
+- **Integración con UFW**: Ejecutar comandos de firewall para bloquear/desbloquear IPs (`ufw insert 1 deny from <IP> to any port 22` para que la regla tenga prioridad, y `ufw delete deny from <IP>`).
 - **Gestión de timeouts**: Programar la expiración automática de baneos y actualizar el estado en Redis.
 
 **Acciones ejecutadas:**

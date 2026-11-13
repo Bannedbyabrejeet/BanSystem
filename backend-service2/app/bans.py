@@ -3,7 +3,7 @@
 Responsabilidades:
 
 * **Baneo automático (US-04):** al recibir ``BAN_REQUIRED`` del motor, ejecuta
-  ``ufw deny from <IP> to any port 22`` y persiste la sanción en
+  ``ufw insert 1 deny from <IP> to any port 22`` y persiste la sanción en
   ``ips:banned`` e ``ips:history``.
 * **Expiración (US-05):** mantiene el ZSET ``bans:expirations`` con el
   instante de vencimiento. Un worker llama a :meth:`BanService.expire_due`
