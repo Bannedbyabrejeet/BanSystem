@@ -3,19 +3,19 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-11-13.
+> Generado: 2026-11-14.
 
 ## 1. Veredicto
 
 | Aspecto | Resultado |
 |---|---|
 | Tipo de proyecto | app |
-| Índice de calidad de servicios | **24/100** (mínimo 50) |
+| Índice de calidad de servicios | **27/100** (mínimo 50) |
 | Criterios cumplidos | **10/16** |
 | Aprobado (semáforo) | **NO** |
-| Código (LOC) | 6,289 |
-| Archivos de código | 67 |
-| Tests (archivos) | 16 |
+| Código (LOC) | 7,633 |
+| Archivos de código | 84 |
+| Tests (archivos) | 18 |
 | Cobertura de líneas | 70.5% (mínimo 80%) |
 | Capas detectadas | presentacion, logica, datos, vistas, servicios, estado |
 | Pushes directos a `main` (sin PR) | 1 |
@@ -28,7 +28,7 @@
 
 | Autor | Commits | Código (LOC) | Tests (LOC) | Docs (LOC) | Días activos | % del código |
 |---|---:|---:|---:|---:|---:|---:|
-| SantiMulet | 20 | 8,091 | 2,422 | 3,290 | 12 | 100% |
+| SantiMulet | 23 | 10,401 | 2,880 | 4,067 | 14 | 100% |
 | manu_abrego_1913 | 5 | 0 | 0 | 253 | 5 | 0% |
 
 > _El LOC de autoría lo calcula RepoSense sobre el historial y puede diferir del LOC de código del análisis de calidad (que mira solo el estado de `main`)._
@@ -54,7 +54,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Un resumen numérico (0-100) que combina todas las señales y métricas del análisis, con topes duros por duplicación.
 - **Por qué importa:** Ordena y prioriza la revisión: un índice bajo indica varias señales que conviene mirar juntas.
-- **Tu resultado:** índice **24/100** _(mínimo 50)_
+- **Tu resultado:** índice **27/100** _(mínimo 50)_
 - **Para investigar la causa:**
     - ¿En qué momento del proyecto se concentraron los problemas (arranque, integración de partes, cierre)?
     - ¿El índice bajó por muchas señales chicas o por una o dos graves?
@@ -64,7 +64,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Porcentaje de bloques de código repetidos (similitud) en el repositorio.
 - **Por qué importa:** Cada copia se mantiene por separado: un arreglo hay que repetirlo y los defectos se multiplican.
-- **Tu resultado:** **4.7%** de duplicación _(máximo 15%)_
+- **Tu resultado:** **4.9%** de duplicación _(máximo 15%)_
 
 ### 3. Secretos hardcodeados (SEC) — OK
 
@@ -106,7 +106,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Componentes de UI muy extensos, que suelen mezclar render, estado y lógica.
 - **Por qué importa:** Son difíciles de leer, probar y reutilizar, y sus cambios tienen efectos inesperados.
-- **Tu resultado:** **3** componente(s) demasiado grande(s) _(máximo 1)_
+- **Tu resultado:** **5** componente(s) demasiado grande(s) _(máximo 1)_
 - **Para investigar la causa:**
     - ¿El componente creció a medida que se agregaban requisitos, sin volver a dividirlo?
     - ¿Mezcla responsabilidades distintas (mostrar, calcular, pedir datos)?
@@ -126,7 +126,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Complejidad ciclomática: cantidad de caminos posibles dentro de una función (condicionales, bucles, casos).
 - **Por qué importa:** Muchos caminos = difícil de seguir y de probar; suelen esconderse casos sin cubrir.
-- **Tu resultado:** **38** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 6289 LOC))_
+- **Tu resultado:** **41** bloque(s) de complejidad alta _(máximo 5 por 1000 LOC (tenés 7633 LOC))_
 - **Para investigar la causa:**
     - ¿Se agregaron condiciones a medida que aparecían casos nuevos?
     - ¿Se probaron todos los caminos o solo el caso principal?
@@ -136,13 +136,13 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Tamaño de las funciones/métodos y cantidad de parámetros.
 - **Por qué importa:** Una función que hace varias cosas cuesta leerla, nombrarla y reutilizarla.
-- **Tu resultado:** **48** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
+- **Tu resultado:** **54** función/método(s) largos o con muchos parámetros _(máximo 10 por 1000 LOC)_
 
 ### 13. Acoplamiento alto (Acop) — A REVISAR
 
 - **Qué mide:** Cuánto depende una unidad de las partes internas de otra.
 - **Por qué importa:** Piezas muy enlazadas hacen que un cambio se propague y que sea difícil reemplazar partes.
-- **Tu resultado:** **19** unidad(es) con acoplamiento alto _(máximo 2 por 1000 LOC)_
+- **Tu resultado:** **20** unidad(es) con acoplamiento alto _(máximo 2 por 1000 LOC)_
 - **Para investigar la causa:**
     - ¿Las piezas se conocen en detalle entre sí (acceden a campos o estructuras internas)?
     - ¿El acceso a datos ocurre desde lugares que no son los responsables?
@@ -162,13 +162,13 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Cantidad de endpoints (rutas HTTP) expuestos por el backend.
 - **Por qué importa:** El backend se mide por lo que expone: pocos endpoints sugiere poca funcionalidad de servicio.
-- **Tu resultado:** **36** endpoint(s) _(mínimo 5)_
+- **Tu resultado:** **41** endpoint(s) _(mínimo 5)_
 
 ### 16. Vistas del frontend (Vistas) — OK
 
 - **Qué mide:** Cantidad de vistas/componentes de pantalla del frontend.
 - **Por qué importa:** El frontend se mide por pantallas: pocas vistas sugiere poca cobertura de la interfaz pedida.
-- **Tu resultado:** **13** vista(s)/componente(s) _(mínimo 6)_
+- **Tu resultado:** **20** vista(s)/componente(s) _(mínimo 6)_
 
 ## 5. Observaciones y qué falta
 
@@ -176,11 +176,11 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 | Criterio | Resultado actual | Meta | Brecha | Cómo alcanzarlo |
 |---|---|---|---|---|
-| Índice de calidad de servicios (indice) | índice **24/100** | mínimo 50 | faltan 26 pts | El índice sólo penaliza lo que **excede** los umbrales de cada criterio: si tenés todo en verde, el índice es 100. Si está en rojo, mirá la columna **Brecha** y los criterios en rojo; corregí primero duplicación, SEC, SQL y capas. Meta del perfil exigente: ≥50. |
-| Componente demasiado grande (BigC) | **3** componente(s) demasiado grande(s) | máximo 1 | 2 componente(s) de más | Dividí el componente por responsabilidad en subcomponentes (render, estado, acceso a datos) y dejá el original sólo como orquestador. Meta: ≤1 componente grande. |
+| Índice de calidad de servicios (indice) | índice **27/100** | mínimo 50 | faltan 23 pts | El índice sólo penaliza lo que **excede** los umbrales de cada criterio: si tenés todo en verde, el índice es 100. Si está en rojo, mirá la columna **Brecha** y los criterios en rojo; corregí primero duplicación, SEC, SQL y capas. Meta del perfil exigente: ≥50. |
+| Componente demasiado grande (BigC) | **5** componente(s) demasiado grande(s) | máximo 1 | 4 componente(s) de más | Dividí el componente por responsabilidad en subcomponentes (render, estado, acceso a datos) y dejá el original sólo como orquestador. Meta: ≤1 componente grande. |
 | Baja cohesión (Coh) | **4** unidad(es) con baja cohesión | máximo 0 | 4 clase(s) a separar | Separá la clase en unidades con una sola responsabilidad: si los métodos cambian por motivos distintos, son clases distintas. Meta: 0 clases con baja cohesión. |
-| Complejidad alta (Compl) | **38** bloque(s) de complejidad alta | máximo 5 por 1000 LOC (tenés 6289 LOC) | 38 hallazgo(s); el máximo para 6,289 LOC es 31.4 | Extraé condiciones y ramas a funciones con nombre propio, usá retornos tempranos y evitá anidar `if`/`switch`. Meta: ≤5 bloques por 1000 LOC. |
-| Acoplamiento alto (Acop) | **19** unidad(es) con acoplamiento alto | máximo 2 por 1000 LOC | 19 hallazgo(s); el máximo para 6,289 LOC es 12.6 | Hacé que cada unidad dependa de una interfaz o de un módulo de servicio, no de los detalles internos de otra; evitá acceder a campos ajenos. Meta: ≤2 por 1000 LOC. |
+| Complejidad alta (Compl) | **41** bloque(s) de complejidad alta | máximo 5 por 1000 LOC (tenés 7633 LOC) | 41 hallazgo(s); el máximo para 7,633 LOC es 38.2 | Extraé condiciones y ramas a funciones con nombre propio, usá retornos tempranos y evitá anidar `if`/`switch`. Meta: ≤5 bloques por 1000 LOC. |
+| Acoplamiento alto (Acop) | **20** unidad(es) con acoplamiento alto | máximo 2 por 1000 LOC | 20 hallazgo(s); el máximo para 7,633 LOC es 15.3 | Hacé que cada unidad dependa de una interfaz o de un módulo de servicio, no de los detalles internos de otra; evitá acceder a campos ajenos. Meta: ≤2 por 1000 LOC. |
 | Cobertura de tests (Cob) | **70.5%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.2%, backend-service2 83.2%) | mínimo 80% de líneas | faltan 9.5 pts | Agregá o ampliá tests que ejecuten los módulos sin cubrir (camino principal y errores) y publicá el artefacto (`coverage/lcov.info`, `coverage-summary.json`, `coverage.xml` o `coverage.json`) o corré la suite con coverage. Meta: ≥80% de líneas. |
 
 > Empezá por las señales de seguridad (**SEC**, **SQL**) y por la **duplicación**: son las que más pesan en el índice y las más rápidas de verificar a ojo. Después de corregir, volvé a correr la medición: el semáforo se recalcula sobre `main`.
@@ -227,7 +227,7 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 ### SantiMulet
 
-**13/27 clases con actividad** · total del período: 23 commits · 10 merges
+**14/27 clases con actividad** · total del período: 23 commits · 10 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -256,8 +256,8 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 | 2026-10-30 | **Sí** | BanSystem | 2 / 1 |
 | 2026-11-04 | No | sin actividad | 0 / 0 |
 | 2026-11-06 | No | sin actividad | 0 / 0 |
-| 2026-11-11 | **Sí** | BanSystem | 1 / 1 |
-| 2026-11-13 | No | sin actividad | 0 / 0 |
+| 2026-11-11 | **Sí** | BanSystem | 1 / 0 |
+| 2026-11-13 | **Sí** | BanSystem | 0 / 1 |
 
 **Fuera de clase:** sin actividad registrada.
 
@@ -265,10 +265,12 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 Archivos donde el análisis encontró cada señal en rojo (sin número de línea, a propósito):
 
-**Componente demasiado grande (BigC)** — 3 archivo(s):
+**Componente demasiado grande (BigC)** — 5 archivo(s):
 - `frontend-admin/src/components/ui.jsx`
 - `frontend-admin/src/pages/DashboardPage.jsx`
 - `frontend-admin/src/pages/ResetPasswordPage.jsx`
+- `frontend-ops/src/views/BansView.vue`
+- `frontend-ops/src/views/LogsView.vue`
 
 **Baja cohesión (Coh)** — 4 archivo(s):
 - `backend-service1/app/core/config.py`
@@ -276,12 +278,14 @@ Archivos donde el análisis encontró cada señal en rojo (sin número de línea
 - `backend-service2/app/monitor.py`
 - `backend-service2/app/ufw.py`
 
-**Complejidad alta (Compl)** — 23 archivo(s):
+**Complejidad alta (Compl)** — 26 archivo(s):
 - `backend-service1/app/api/v1/endpoints/banned_ips.py`
 - `backend-service1/app/core/config.py`
 - `backend-service1/app/core/security.py`
 - `backend-service1/app/services/auth_service.py`
 - `backend-service1/app/services/mail_service.py`
+- `backend-service2/app/api.py`
+- `backend-service2/app/auth.py`
 - `backend-service2/app/bans.py`
 - `backend-service2/app/engine.py`
 - `backend-service2/app/main.py`
@@ -290,6 +294,7 @@ Archivos donde el análisis encontró cada señal en rojo (sin número de línea
 - `backend-service2/app/redis_config.py`
 - `backend-service2/app/runner.py`
 - `backend-service2/app/tailer.py`
+- `backend-service2/app/telemetry.py`
 - `backend-service2/app/ufw.py`
 - `backend-service2/app/unban_worker.py`
 - `backend-service2/scripts/demo_ufw.py`
@@ -301,7 +306,7 @@ Archivos donde el análisis encontró cada señal en rojo (sin número de línea
 - `frontend-admin/src/pages/SetupPage.jsx`
 - `frontend-admin/src/utils/validation.js`
 
-**Acoplamiento alto (Acop)** — 15 archivo(s):
+**Acoplamiento alto (Acop)** — 16 archivo(s):
 - `backend-service1/app/core/config.py`
 - `backend-service1/app/schemas/auth.py`
 - `backend-service1/app/schemas/config.py`
@@ -315,6 +320,7 @@ Archivos donde el análisis encontró cada señal en rojo (sin número de línea
 - `backend-service2/app/monitor.py`
 - `backend-service2/app/redis_config.py`
 - `backend-service2/app/tailer.py`
+- `backend-service2/app/telemetry.py`
 - `backend-service2/app/ufw.py`
 - `backend-service2/app/unban_worker.py`
 
