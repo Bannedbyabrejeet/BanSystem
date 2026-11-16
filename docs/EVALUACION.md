@@ -3,7 +3,7 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-11-14.
+> Generado: 2026-11-16.
 
 ## 1. Veredicto
 
@@ -16,7 +16,7 @@
 | Código (LOC) | 7,633 |
 | Archivos de código | 84 |
 | Tests (archivos) | 18 |
-| Cobertura de líneas | 70.5% (mínimo 80%) |
+| Cobertura de líneas | 72.2% (mínimo 80%) |
 | Capas detectadas | presentacion, logica, datos, vistas, servicios, estado |
 | Pushes directos a `main` (sin PR) | 1 |
 
@@ -41,8 +41,8 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| SantiMulet | 11 | 42% | 23 d | 86% | **39** | No aprueba | Cumplimiento 42% (mín. 50%) |
-| manu_abrego_1913 | 6 | 23% | 61 d | 86% | **27** | No aprueba | Cumplimiento 23% (mín. 50%) |
+| SantiMulet | 11 | 41% | 23 d | 64% | **35** | No aprueba | Cumplimiento 41% (mín. 50%) |
+| manu_abrego_1913 | 6 | 22% | 61 d | 64% | **23** | No aprueba | Cumplimiento 22% (mín. 50%) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -152,7 +152,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 - **Qué mide:** Porcentaje de líneas de código ejecutadas por la suite de tests (cobertura real, no cantidad de archivos de test).
 - **Por qué importa:** Un test que existe pero no ejecuta el código no protege de nada: la cobertura muestra qué partes quedan sin verificar.
-- **Tu resultado:** **70.5%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.2%, backend-service2 83.2%) _(mínimo 80% de líneas)_
+- **Tu resultado:** **72.2%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.2%, backend-service2 83.6%) _(mínimo 80% de líneas)_
 - **Para investigar la causa:**
     - ¿Qué módulos o ramas del sistema nunca se ejecutan en los tests?
     - ¿Los tests prueban el camino principal y los errores, o solo el caso feliz?
@@ -181,7 +181,7 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 | Baja cohesión (Coh) | **4** unidad(es) con baja cohesión | máximo 0 | 4 clase(s) a separar | Separá la clase en unidades con una sola responsabilidad: si los métodos cambian por motivos distintos, son clases distintas. Meta: 0 clases con baja cohesión. |
 | Complejidad alta (Compl) | **41** bloque(s) de complejidad alta | máximo 5 por 1000 LOC (tenés 7633 LOC) | 41 hallazgo(s); el máximo para 7,633 LOC es 38.2 | Extraé condiciones y ramas a funciones con nombre propio, usá retornos tempranos y evitá anidar `if`/`switch`. Meta: ≤5 bloques por 1000 LOC. |
 | Acoplamiento alto (Acop) | **20** unidad(es) con acoplamiento alto | máximo 2 por 1000 LOC | 20 hallazgo(s); el máximo para 7,633 LOC es 15.3 | Hacé que cada unidad dependa de una interfaz o de un módulo de servicio, no de los detalles internos de otra; evitá acceder a campos ajenos. Meta: ≤2 por 1000 LOC. |
-| Cobertura de tests (Cob) | **70.5%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.2%, backend-service2 83.2%) | mínimo 80% de líneas | faltan 9.5 pts | Agregá o ampliá tests que ejecuten los módulos sin cubrir (camino principal y errores) y publicá el artefacto (`coverage/lcov.info`, `coverage-summary.json`, `coverage.xml` o `coverage.json`) o corré la suite con coverage. Meta: ≥80% de líneas. |
+| Cobertura de tests (Cob) | **72.2%** de líneas cubiertas · fuente: ejecución: pytest (backend-service1 60.2%, backend-service2 83.6%) | mínimo 80% de líneas | faltan 7.8 pts | Agregá o ampliá tests que ejecuten los módulos sin cubrir (camino principal y errores) y publicá el artefacto (`coverage/lcov.info`, `coverage-summary.json`, `coverage.xml` o `coverage.json`) o corré la suite con coverage. Meta: ≥80% de líneas. |
 
 > Empezá por las señales de seguridad (**SEC**, **SQL**) y por la **duplicación**: son las que más pesan en el índice y las más rápidas de verificar a ojo. Después de corregir, volvé a correr la medición: el semáforo se recalcula sobre `main`.
 
