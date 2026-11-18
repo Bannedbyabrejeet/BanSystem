@@ -263,69 +263,114 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 **Fuera de clase:** sin actividad registrada.
 
-## 7. Anexo: dónde mirar
+## 7. Anexo: archivos donde se originan los problemas
 
-Archivos donde el análisis encontró cada señal en rojo (sin número de línea, a propósito):
+Se listan los archivos y líneas que el análisis marca para cada criterio en rojo. Para **duplicación** se muestran los archivos con más líneas repetidas; para **cobertura**, las unidades por debajo del umbral.
 
-**Componente demasiado grande (BigC)** — 5 archivo(s):
-- `frontend-admin/src/components/ui.jsx`
-- `frontend-admin/src/pages/DashboardPage.jsx`
-- `frontend-admin/src/pages/ResetPasswordPage.jsx`
-- `frontend-ops/src/views/BansView.vue`
-- `frontend-ops/src/views/LogsView.vue`
+**Índice (indice)** — señales que más pesan:
 
-**Baja cohesión (Coh)** — 4 archivo(s):
-- `backend-service1/app/core/config.py`
-- `backend-service1/app/schemas/auth.py`
-- `backend-service2/app/monitor.py`
-- `backend-service2/app/ufw.py`
+- `backend-service1/app/main.py:89` — long_function: función 'create_app' de 37 líneas
+- `backend-service1/app/main.py:131` — long_function: función '_register_exception_handlers' de 33 líneas
+- `backend-service1/app/db/redis.py:47` — long_function: función 'wait_for_redis' de 35 líneas
+- `backend-service1/app/core/config.py:32` — low_cohesion: clase 'Settings' con baja cohesión (2%)
+- `backend-service1/app/core/config.py:32` — high_coupling: clase 'Settings' muy acoplada (CBO=59)
+- `backend-service1/app/core/config.py:178` — high_complexity: método 'Settings._validate_runtime_consistency' con complejidad 6
+- `backend-service1/app/core/security.py:99` — high_complexity: función 'password_policy_violations' con complejidad 7
+- `backend-service1/app/core/security.py:136` — long_function: función '_build_password_hasher' de 30 líneas
+- `backend-service1/app/core/security.py:208` — long_function: función 'verify_password' de 30 líneas
+- `backend-service1/app/core/security.py:251` — long_function: función 'create_access_token' de 40 líneas
+- `backend-service1/app/core/security.py:293` — long_function: función 'decode_access_token' de 36 líneas
+- `backend-service1/app/api/v1/endpoints/config.py:183` — long_function: función 'remove_whitelist_entry' de 37 líneas
+- `backend-service1/app/api/v1/endpoints/auth.py:198` — long_function: función 'forgot_password' de 30 líneas
+- `backend-service1/app/api/v1/endpoints/history.py:50` — long_function: función 'read_banned_ip_history' de 30 líneas
+- `backend-service1/app/api/v1/endpoints/banned_ips.py:50` — long_function: función 'read_banned_ips' de 30 líneas
+- `backend-service1/app/api/v1/endpoints/banned_ips.py:50` — high_complexity: función 'read_banned_ips' con complejidad 6
+- `backend-service1/app/api/v1/endpoints/banned_ips.py:103` — long_function: función 'ban_ip_manual' de 84 líneas
+- `backend-service1/app/api/v1/endpoints/banned_ips.py:103` — high_complexity: función 'ban_ip_manual' con complejidad 6
+- `backend-service1/app/api/v1/endpoints/banned_ips.py:209` — long_function: función 'unban_ip_manual' de 80 líneas
+- `backend-service1/app/schemas/config.py:21` — high_coupling: clase 'BanSettings' muy acoplada (CBO=9)
+- `backend-service1/app/schemas/config.py:49` — high_coupling: clase 'WhitelistEntryRequest' muy acoplada (CBO=11)
+- `backend-service1/app/schemas/config.py:91` — high_coupling: clase 'BanRecord' muy acoplada (CBO=9)
+- `backend-service1/app/schemas/config.py:118` — high_coupling: clase 'HistoryEntry' muy acoplada (CBO=9)
+- `backend-service1/app/schemas/auth.py:35` — low_cohesion: clase 'AdminRecord' con baja cohesión (0%)
+- `backend-service1/app/schemas/auth.py:92` — high_coupling: clase 'SetupRequest' muy acoplada (CBO=9)
+- `backend-service1/app/services/mail_service.py:51` — high_coupling: clase 'MailService' muy acoplada (CBO=30)
+- `backend-service1/app/services/mail_service.py:93` — long_method: método 'MailService._send_via_smtp' de 38 líneas
+- `backend-service1/app/services/mail_service.py:93` — high_complexity: método 'MailService._send_via_smtp' con complejidad 7
+- `backend-service1/app/services/mail_service.py:136` — long_params: método 'MailService._smtp_auth_and_send' con 5 parámetros
+- `backend-service1/app/services/config_service.py:64` — high_coupling: clase 'ConfigService' muy acoplada (CBO=30)
+- … y 94 hallazgo(s) más.
 
-**Complejidad alta (Compl)** — 26 archivo(s):
-- `backend-service1/app/api/v1/endpoints/banned_ips.py`
-- `backend-service1/app/core/config.py`
-- `backend-service1/app/core/security.py`
-- `backend-service1/app/services/auth_service.py`
-- `backend-service1/app/services/mail_service.py`
-- `backend-service2/app/api.py`
-- `backend-service2/app/auth.py`
-- `backend-service2/app/bans.py`
-- `backend-service2/app/engine.py`
-- `backend-service2/app/main.py`
-- `backend-service2/app/monitor.py`
-- `backend-service2/app/parser.py`
-- `backend-service2/app/redis_config.py`
-- `backend-service2/app/runner.py`
-- `backend-service2/app/tailer.py`
-- `backend-service2/app/telemetry.py`
-- `backend-service2/app/ufw.py`
-- `backend-service2/app/unban_worker.py`
-- `backend-service2/scripts/demo_ufw.py`
-- `frontend-admin/src/context/AuthProvider.jsx`
-- `frontend-admin/src/hooks/useBanConfig.js`
-- `frontend-admin/src/pages/ForgotPasswordPage.jsx`
-- `frontend-admin/src/pages/LoginPage.jsx`
-- `frontend-admin/src/pages/ResetPasswordPage.jsx`
-- `frontend-admin/src/pages/SetupPage.jsx`
-- `frontend-admin/src/utils/validation.js`
+**Componente demasiado grande (BigC)** — 5 hallazgo(s) en 5 archivo(s):
 
-**Acoplamiento alto (Acop)** — 16 archivo(s):
-- `backend-service1/app/core/config.py`
-- `backend-service1/app/schemas/auth.py`
-- `backend-service1/app/schemas/config.py`
-- `backend-service1/app/services/auth_service.py`
-- `backend-service1/app/services/config_service.py`
-- `backend-service1/app/services/mail_service.py`
-- `backend-service2/app/bans.py`
-- `backend-service2/app/config.py`
-- `backend-service2/app/engine.py`
-- `backend-service2/app/models.py`
-- `backend-service2/app/monitor.py`
-- `backend-service2/app/redis_config.py`
-- `backend-service2/app/tailer.py`
-- `backend-service2/app/telemetry.py`
-- `backend-service2/app/ufw.py`
-- `backend-service2/app/unban_worker.py`
+| Archivo | Línea(s) | Señal |
+|---|---|---|
+| `frontend-admin/src/components/ui.jsx` | 1 | componente grande (151 líneas) |
+| `frontend-admin/src/pages/DashboardPage.jsx` | 1 | componente grande (159 líneas) |
+| `frontend-admin/src/pages/ResetPasswordPage.jsx` | 1 | componente grande (169 líneas) |
+| `frontend-ops/src/views/BansView.vue` | 1 | componente grande (241 líneas) |
+| `frontend-ops/src/views/LogsView.vue` | 1 | componente grande (240 líneas) |
+
+**Baja cohesión (Coh)** — 4 hallazgo(s) en 4 archivo(s):
+
+| Archivo | Línea(s) | Señal |
+|---|---|---|
+| `backend-service1/app/core/config.py` | 32 | clase 'Settings' con baja cohesión (2%) |
+| `backend-service1/app/schemas/auth.py` | 35 | clase 'AdminRecord' con baja cohesión (0%) |
+| `backend-service2/app/monitor.py` | 20 | clase 'LogMonitor' con baja cohesión (32%) |
+| `backend-service2/app/ufw.py` | 69 | clase 'UfwExecutor' con baja cohesión (29%) |
+
+**Complejidad alta (Compl)** — 41 hallazgo(s) en 26 archivo(s):
+
+| Archivo | Línea(s) | Señal |
+|---|---|---|
+| `backend-service1/app/api/v1/endpoints/banned_ips.py` | 50, 103 | función 'read_banned_ips' con complejidad 6 |
+| `backend-service1/app/core/config.py` | 178 | método 'Settings._validate_runtime_consistency' con complejidad 6 |
+| `backend-service1/app/core/security.py` | 99 | función 'password_policy_violations' con complejidad 7 |
+| `backend-service1/app/services/auth_service.py` | 283 | método 'AuthService.get_reset_token_info' con complejidad 7 |
+| `backend-service1/app/services/mail_service.py` | 93 | método 'MailService._send_via_smtp' con complejidad 7 |
+| `backend-service2/app/api.py` | 75 | función 'list_logs' con complejidad 13 |
+| `backend-service2/app/auth.py` | 58 | función 'authenticate' con complejidad 8 |
+| `backend-service2/app/bans.py` | 201, 296 | método 'BanService.unban' con complejidad 6 |
+| `backend-service2/app/engine.py` | 41 | método 'SecurityEngine.process' con complejidad 7 |
+| `backend-service2/app/main.py` | 19 | función 'create_app' con complejidad 7 |
+| `backend-service2/app/monitor.py` | 126, 151 | método 'LogMonitor.run_maintenance' con complejidad 6 |
+| `backend-service2/app/parser.py` | 131 | método 'SSHParser.parse' con complejidad 7 |
+| `backend-service2/app/redis_config.py` | 87 | método 'RedisConfigReader.match_whitelist' con complejidad 6 |
+| `backend-service2/app/runner.py` | 40 | función 'main' con complejidad 8 |
+| `backend-service2/app/tailer.py` | 50, 72 | método 'LogTailer.read_available' con complejidad 6 |
+| `backend-service2/app/telemetry.py` | 85 | método 'TelemetryStore.list_events' con complejidad 13 |
+| `backend-service2/app/ufw.py` | 143 | método 'UfwExecutor._execute' con complejidad 11 |
+| `backend-service2/app/unban_worker.py` | 130 | método 'UnbanWorker._read_and_process' con complejidad 8 |
+| `backend-service2/scripts/demo_ufw.py` | 83 | función 'main' con complejidad 13 |
+| `frontend-admin/src/context/AuthProvider.jsx` | 46, 49 | función 'useEffect' con complejidad 11 |
+| … | … | y 6 archivo(s) más |
+
+**Acoplamiento alto (Acop)** — 20 hallazgo(s) en 16 archivo(s):
+
+| Archivo | Línea(s) | Señal |
+|---|---|---|
+| `backend-service1/app/core/config.py` | 32 | clase 'Settings' muy acoplada (CBO=59) |
+| `backend-service1/app/schemas/auth.py` | 92 | clase 'SetupRequest' muy acoplada (CBO=9) |
+| `backend-service1/app/schemas/config.py` | 21, 49, 91, 118 | clase 'BanSettings' muy acoplada (CBO=9) |
+| `backend-service1/app/services/auth_service.py` | 50, 137 | clase 'ResetOutcome' muy acoplada (CBO=8) |
+| `backend-service1/app/services/config_service.py` | 64 | clase 'ConfigService' muy acoplada (CBO=30) |
+| `backend-service1/app/services/mail_service.py` | 51 | clase 'MailService' muy acoplada (CBO=30) |
+| `backend-service2/app/bans.py` | 87 | clase 'BanService' muy acoplada (CBO=37) |
+| `backend-service2/app/config.py` | 17 | clase 'Settings' muy acoplada (CBO=38) |
+| `backend-service2/app/engine.py` | 28 | clase 'SecurityEngine' muy acoplada (CBO=25) |
+| `backend-service2/app/models.py` | 17 | clase 'SSHEvent' muy acoplada (CBO=12) |
+| `backend-service2/app/monitor.py` | 20 | clase 'LogMonitor' muy acoplada (CBO=44) |
+| `backend-service2/app/redis_config.py` | 61 | clase 'RedisConfigReader' muy acoplada (CBO=18) |
+| `backend-service2/app/tailer.py` | 19 | clase 'LogTailer' muy acoplada (CBO=10) |
+| `backend-service2/app/telemetry.py` | 53 | clase 'TelemetryStore' muy acoplada (CBO=21) |
+| `backend-service2/app/ufw.py` | 69 | clase 'UfwExecutor' muy acoplada (CBO=19) |
+| `backend-service2/app/unban_worker.py` | 48 | clase 'UnbanWorker' muy acoplada (CBO=28) |
+
+**Cobertura (Cob)** — unidades por debajo del umbral:
+
+- `backend-service1` — 60.2% (634/1054 líneas)
 
 ---
-_Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo señalado y el criterio en `CRITERIOS-CALIDAD.md`._
+_Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo y la línea señalados y el criterio en `CRITERIOS-CALIDAD.md`._
 <!-- evaluacion:fin -->
